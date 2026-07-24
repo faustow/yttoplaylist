@@ -2,3 +2,4 @@ yt-dlp>=2024.0
 shazamio>=0.7.0
 certifi
 spotipy>=2.20.0
+audioop-lts>=0.2.1

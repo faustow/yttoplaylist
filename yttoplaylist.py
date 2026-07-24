@@ -559,4 +559,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        logger.error(str(e))
+        sys.exit(1)
+    except KeyboardInterrupt:
+        print("\nInterrupted.")
+        sys.exit(130)

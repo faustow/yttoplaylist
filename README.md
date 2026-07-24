@@ -2,36 +2,48 @@
 
 Extract tracklists from YouTube DJ sets using Shazam audio fingerprinting, and get them into Spotify.
 
-## How it works
-
-1. Downloads audio from a YouTube URL using `yt-dlp`
-2. Splits the audio into segments using `ffmpeg` (default: 20s clips every 30s)
-3. Sends each segment to Shazam for recognition via `shazamio` (sequential, rate-limit safe)
-4. Deduplicates and orders the detected tracks
-5. Optionally searches Spotify and generates an HTML page to open all tracks, or creates a playlist directly via OAuth
-
-## Installation
+## Quick start
 
 ```bash
-pip install -r requirements.txt
+git clone https://github.com/faustow/yttoplaylist.git
+cd yttoplaylist
+pip3 install -r requirements.txt
+python3 yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify --json
 ```
 
-Requires:
-- Python 3.10+
-- `ffmpeg` (`brew install ffmpeg` on macOS)
-- `deno` (`brew install deno` on macOS) — required by yt-dlp for YouTube extraction
+## Requirements
+
+- **Python 3.10+**
+- **ffmpeg** — `brew install ffmpeg` (macOS) or `apt install ffmpeg` (Linux)
+- **deno** — `brew install deno` (macOS) or [deno.land](https://deno.land/) (Linux). Required by yt-dlp to solve YouTube's JavaScript challenges.
+
+All Python dependencies are in `requirements.txt`.
+
+> **Python 3.13 users**: `audioop-lts` is included in requirements.txt to handle a removed stdlib module.
 
 ## Usage
 
 ```bash
-# Basic: detect tracks and save tracklist
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c"
+# Detect tracks and save tracklist
+python3 yttoplaylist.py "YOUTUBE_URL"
 
-# With Spotify integration (generates an HTML page to open all tracks)
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify
+# With Spotify search + HTML opener page
+python3 yttoplaylist.py "YOUTUBE_URL" --spotify
 
-# Also save as JSON (needed for create_playlist.py)
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify --json
+# Also save results as JSON (needed for auto-playlist creation)
+python3 yttoplaylist.py "YOUTUBE_URL" --spotify --json
+
+# Custom output filename
+python3 yttoplaylist.py "YOUTUBE_URL" -o my_set.txt
+
+# Keep the downloaded audio file
+python3 yttoplaylist.py "YOUTUBE_URL" --keep-audio
+
+# Show all segments including unmatched ones
+python3 yttoplaylist.py "YOUTUBE_URL" -v
+
+# Faster but less thorough scan (sample every 60s instead of 30s)
+python3 yttoplaylist.py "YOUTUBE_URL" --interval 60
 ```
 
 ## Getting tracks into Spotify
@@ -40,46 +52,61 @@ python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify -
 
 Pass `--spotify` and the tool generates an HTML file you open in your browser:
 
-- **Open All in Spotify** — opens every track with 800ms delay between each
-- **Open Next** — opens tracks one at a time (click repeatedly)
-- **Copy Track List** — copies the full tracklist to your clipboard
+- **Open All in Spotify** — opens every track (800ms delay between each)
+- **Open Next** — opens tracks one at a time
+- **Copy Track List** — copies the tracklist to your clipboard
 - Individual **Open** button per track
 
 ### Option 2: Auto-create playlist (one-time setup)
 
-Use `create_playlist.py` to create a real playlist directly in your Spotify account:
+Use `create_playlist.py` to create a real playlist directly in your Spotify account.
 
 ```bash
-# First, run yttoplaylist with --json to generate the tracklist JSON
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --json
+# 1. Run yttoplaylist with --json to get the tracklist
+python3 yttoplaylist.py "YOUTUBE_URL" --json -o my_set.txt
 
-# Then create the playlist
-python create_playlist.py tracklist.json "My Playlist Name"
+# 2. Create the Spotify playlist from the JSON
+python3 create_playlist.py my_set.json "My Playlist Name"
 ```
 
 **One-time setup:**
 
-1. Go to https://developer.spotify.com/dashboard and create an app
-   - Name: `yttoplaylist`
-   - Redirect URI: `https://127.0.0.1:8888/callback`
-   - Select "Web API"
-2. Copy the Client ID and Client Secret from Settings
-3. Set environment variables (add to your `~/.zshrc`):
+1. Go to https://developer.spotify.com/dashboard → Create App
+   - **App name**: `yttoplaylist`
+   - **Redirect URI**: `https://127.0.0.1:8888/callback`
+   - **APIs**: select **Web API**
+   - In **Settings → User Management**, add your Spotify email
+2. Copy the **Client ID** and **Client Secret** from Settings
+3. Add to your shell profile (`~/.zshrc` or `~/.bashrc`):
 
 ```bash
 export SPOTIPY_CLIENT_ID="your-client-id"
 export SPOTIPY_CLIENT_SECRET="your-client-secret"
 ```
 
-4. First run opens your browser for authorization. Spotify redirects to a page that won't load — copy the full URL from the address bar and pass it as the third argument:
+4. Run `create_playlist.py` — it opens your browser to authorize. Spotify redirects to a page that won't load (that's OK). Copy the full URL from the address bar and pass it as the third argument:
 
 ```bash
-python create_playlist.py tracklist.json "Playlist Name" "https://127.0.0.1:8888/callback?code=..."
+python3 create_playlist.py my_set.json "My Playlist" "https://127.0.0.1:8888/callback?code=..."
 ```
 
-After the first authorization, the token is cached and subsequent runs work without browser interaction.
+After the first authorization, the token is cached and subsequent runs won't ask again.
 
-**Smart matching**: The search validates that Spotify results actually match the detected artist and title, so underground tracks that aren't on Spotify are reported as "NOT FOUND" instead of adding wrong songs to the playlist.
+The search validates that Spotify results actually match the detected artist and title — underground tracks not on Spotify show as "NOT FOUND" instead of adding wrong songs.
+
+## Troubleshooting
+
+### YouTube says "Sign in to confirm you're not a bot" / HTTP 429
+
+YouTube rate-limits IPs that make too many requests. Solutions:
+
+1. **Wait a few minutes** and try again
+2. **Use browser cookies**: `python3 yttoplaylist.py URL --cookies-from-browser chrome`
+3. **Install deno** if you haven't: `brew install deno` — yt-dlp needs it to solve YouTube's anti-bot challenges
+
+### Shazam doesn't recognize some tracks
+
+Normal — Shazam can't identify tracks during DJ transitions (two songs playing simultaneously) or very underground/unreleased tracks. The tool samples every 30 seconds to maximize coverage, but gaps in the tracklist usually mean the DJ was playing something too obscure for Shazam's database.
 
 ## Example output
 
@@ -123,29 +150,13 @@ Magdalena | Live at La Estación Córdoba | 2025 (90 min set → 33 tracks detec
 
 ## How it handles rate limits
 
-Shazam's API has an undocumented rate limit (~20 requests/minute). The tool processes segments **sequentially** with a 3-second delay between requests (~20 req/min), which stays safely under the threshold. A 90-minute set takes ~10 minutes to analyze.
+**Shazam**: Processes segments sequentially with a 3-second delay between requests (~20 req/min), safely under the rate limit. If throttled, retries with exponential backoff. A 90-minute set takes ~10 minutes to analyze.
 
-If a 429 response is received anyway, the tool retries with exponential backoff (2s → 4s → 8s → 16s → 32s).
-
-## Other options
-
-```bash
-# If YouTube rate-limits you
-python yttoplaylist.py URL --cookies-from-browser chrome
-
-# Keep the downloaded audio file
-python yttoplaylist.py URL --keep-audio
-
-# Verbose (show unmatched segments too)
-python yttoplaylist.py URL -v
-
-# Faster but less thorough scan
-python yttoplaylist.py URL --interval 60
-```
+**YouTube**: If rate-limited, the tool suggests using `--cookies-from-browser`. Multiple rapid downloads from the same IP will trigger YouTube's anti-bot protection.
 
 ## Use case
 
-Analyze how DJs like Magdalena, Solomun, Adriatique, etc. build their setlists — what tracks they pick, in what order, and how they transition between genres and energy levels.
+Analyze how DJs like Magdalena, Solomun, Adriatique, Juan Hansen, etc. build their setlists — what tracks they pick, in what order, and how they transition between genres and energy levels.
 
 ## License
 
