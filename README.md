@@ -1,6 +1,6 @@
 # yttoplaylist
 
-Extract tracklists from YouTube DJ sets using Shazam audio fingerprinting, and generate Spotify-ready search links.
+Extract tracklists from YouTube DJ sets using Shazam audio fingerprinting, and get them into Spotify.
 
 ## How it works
 
@@ -8,8 +8,7 @@ Extract tracklists from YouTube DJ sets using Shazam audio fingerprinting, and g
 2. Splits the audio into segments using `ffmpeg` (default: 20s clips every 30s)
 3. Sends each segment to Shazam for recognition via `shazamio` (sequential, rate-limit safe)
 4. Deduplicates and orders the detected tracks
-5. Optionally searches Spotify for each track (no API key needed)
-6. Outputs a timestamped tracklist as `.txt`, `.json`, and Spotify links
+5. Optionally searches Spotify and generates an HTML page to open all tracks, or creates a playlist directly via OAuth
 
 ## Installation
 
@@ -28,11 +27,14 @@ Requires:
 # Basic: detect tracks and save tracklist
 python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c"
 
-# With Spotify links + JSON output
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify --json
+# With Spotify integration (generates an HTML page to open all tracks)
+python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify
 
-# Custom output file
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" -o my_set.txt
+# Create a Spotify playlist directly in your account (requires OAuth setup, see below)
+python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify-playlist "Magdalena Córdoba 2025"
+
+# Also save as JSON
+python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify --json
 
 # If YouTube rate-limits you
 python yttoplaylist.py URL --cookies-from-browser chrome
@@ -44,15 +46,42 @@ python yttoplaylist.py URL --keep-audio
 python yttoplaylist.py URL -v
 ```
 
+## Spotify integration
+
+### Option 1: HTML opener (no setup needed)
+
+Pass `--spotify` and the tool generates an HTML file you open in your browser:
+
+- **Open All in Spotify** — opens every track with 800ms delay between each
+- **Open Next** — opens tracks one at a time (click repeatedly)
+- **Copy Track List** — copies the full tracklist to your clipboard
+- Individual **Open** button per track
+
+No API keys, no accounts, no OAuth. Just open the HTML file.
+
+### Option 2: Auto-create playlist (one-time setup)
+
+Pass `--spotify-playlist "My Playlist Name"` to create a real playlist in your Spotify account.
+
+One-time setup:
+1. Go to https://developer.spotify.com/dashboard
+2. Create an app (name: "yttoplaylist", any description)
+3. In Settings, add `http://localhost:8888/callback` as Redirect URI
+4. Copy the Client ID and Client Secret
+5. Set environment variables:
+
+```bash
+export SPOTIPY_CLIENT_ID="your-client-id"
+export SPOTIPY_CLIENT_SECRET="your-client-secret"
+```
+
+The first run will open a browser window for you to authorize. After that, the token is cached.
+
 ## Example output
 
 Magdalena | Live at La Estación Córdoba | 2025 (90 min set → 33 tracks detected):
 
 ```
-# Tracklist: Magdalena | Live at La Estacion Còrdoba | 2025
-# Source: https://www.youtube.com/watch?v=XR7771GXI1c
-# Tracks found: 33
-
  1. [04:00] Ion Ludwig - Classilion
  2. [10:00] Lecco - Keep Riddin
  3. [14:00] MIKAA & Joui - Talk My Talk (Original)
