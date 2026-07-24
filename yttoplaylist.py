@@ -18,8 +18,7 @@ import tempfile
 from datetime import datetime
 from pathlib import Path
 
-from pydub import AudioSegment
-from shazamio import Shazam, Serialize
+from shazamio import Shazam
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,6 +68,20 @@ def download_audio(url: str, output_dir: str) -> tuple[str, str]:
     return output_path, title
 
 
+def get_audio_duration(audio_path: str) -> float:
+    """Get duration of an audio file in seconds using ffprobe."""
+    result = subprocess.run(
+        [
+            "ffprobe", "-v", "quiet",
+            "-show_entries", "format=duration",
+            "-of", "csv=p=0",
+            audio_path,
+        ],
+        capture_output=True, text=True, check=True,
+    )
+    return float(result.stdout.strip())
+
+
 def split_audio(
     audio_path: str,
     output_dir: str,
@@ -76,7 +89,7 @@ def split_audio(
     interval: int = 60,
 ) -> list[tuple[str, int]]:
     """
-    Split audio into segments for recognition.
+    Split audio into segments for recognition using ffmpeg.
 
     Args:
         audio_path: Path to the audio file
@@ -87,9 +100,7 @@ def split_audio(
     Returns:
         List of (segment_path, start_time_seconds)
     """
-    logger.info("Loading audio file...")
-    audio = AudioSegment.from_file(audio_path)
-    total_duration = len(audio) // 1000  # milliseconds to seconds
+    total_duration = int(get_audio_duration(audio_path))
     logger.info(f"Audio duration: {total_duration // 60}m {total_duration % 60}s")
 
     segments = []
@@ -98,14 +109,20 @@ def split_audio(
 
     position = 0
     while position < total_duration:
-        start_ms = position * 1000
-        end_ms = min((position + segment_duration) * 1000, len(audio))
-        segment = audio[start_ms:end_ms]
-
         segment_path = os.path.join(segments_dir, f"segment_{position:05d}.ogg")
-        segment.export(segment_path, format="ogg")
+        subprocess.run(
+            [
+                "ffmpeg", "-y", "-v", "quiet",
+                "-ss", str(position),
+                "-i", audio_path,
+                "-t", str(segment_duration),
+                "-ac", "1",             # mono (Shazam only needs mono)
+                "-ar", "16000",         # 16kHz sample rate (enough for fingerprinting)
+                segment_path,
+            ],
+            check=True, capture_output=True,
+        )
         segments.append((segment_path, position))
-
         position += interval
 
     logger.info(f"Created {len(segments)} segments (every {interval}s, {segment_duration}s each)")
