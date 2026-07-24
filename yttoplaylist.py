@@ -62,23 +62,44 @@ SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
 
 
 class SSLHTTPClient(HTTPClient):
-    """HTTPClient that uses certifi SSL certificates for macOS compatibility."""
+    """HTTPClient with certifi SSL and proper 429 handling."""
 
     async def request(self, method, url, *args, **kwargs):
-        async with RetryClient(
-            retry_options=self.retry_options,
-            raise_for_status=False,
-            trace_configs=[self.trace_config],
-        ) as client:
-            kwargs["ssl"] = SSL_CONTEXT
-            if method.upper() == "GET":
-                async with client.get(url, **kwargs) as resp:
-                    return await validate_json(resp, *args)
-            elif method.upper() == "POST":
-                async with client.post(url, **kwargs) as resp:
-                    return await validate_json(resp, *args)
-            else:
-                raise BadMethod("Accept only GET/POST")
+        import json as _json
+
+        kwargs["ssl"] = SSL_CONTEXT
+        max_retries = 5
+        base_delay = 2.0
+
+        for attempt in range(max_retries):
+            async with RetryClient(
+                retry_options=self.retry_options,
+                raise_for_status=False,
+                trace_configs=[self.trace_config],
+            ) as client:
+                handler = client.get if method.upper() == "GET" else client.post
+                if method.upper() not in ("GET", "POST"):
+                    raise BadMethod("Accept only GET/POST")
+
+                async with handler(url, **kwargs) as resp:
+                    if resp.status == 429:
+                        delay = base_delay * (2 ** attempt)
+                        logger.debug(f"Shazam 429, waiting {delay:.0f}s (attempt {attempt + 1}/{max_retries})")
+                        await asyncio.sleep(delay)
+                        continue
+
+                    text = await resp.text()
+                    try:
+                        return _json.loads(text)
+                    except _json.JSONDecodeError:
+                        if attempt < max_retries - 1:
+                            delay = base_delay * (2 ** attempt)
+                            await asyncio.sleep(delay)
+                            continue
+                        raise
+
+        # If we exhausted retries on 429
+        raise Exception("Shazam API rate limited (429) - try again later")
 
 
 def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tuple[str, str]:
@@ -232,6 +253,8 @@ async def recognize_segments(
     async def recognize_one(segment_path: str, start_time: int, index: int):
         nonlocal completed, matched
         async with semaphore:
+            # Small delay proportional to index within batch to stagger requests
+            await asyncio.sleep(0.5 * (index % max_concurrent))
             timestamp = f"{start_time // 60:02d}:{start_time % 60:02d}"
             try:
                 out = await asyncio.wait_for(
@@ -298,9 +321,9 @@ async def recognize_segments(
         ]
         await asyncio.gather(*batch)
 
-        # Small delay between batches to avoid API rate limiting
+        # Delay between batches to avoid API rate limiting
         if batch_end < total:
-            await asyncio.sleep(1.0)
+            await asyncio.sleep(2.0)
 
     print(file=sys.stderr)  # newline after progress bar
 
