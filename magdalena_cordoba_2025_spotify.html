@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spotify Playlist: Magdalena | Live at La Estacion Còrdoba | 2025</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #121212; color: #fff; margin: 2rem; }
+    h1 { color: #1DB954; font-size: 1.5rem; }
+    .subtitle { color: #b3b3b3; margin-bottom: 1.5rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #282828; }
+    th { color: #b3b3b3; font-weight: normal; text-transform: uppercase; font-size: 0.75rem; }
+    tr:hover { background: #1a1a1a; }
+    a { color: #1DB954; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .open-btn { background: #1DB954; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+    .open-btn:hover { background: #1ed760; text-decoration: none; }
+    .found { color: #1DB954; font-size: 0.8rem; }
+    .search { color: #b3b3b3; font-size: 0.8rem; }
+    .actions { margin: 1.5rem 0; display: flex; gap: 1rem; }
+    .action-btn { background: #1DB954; color: #000; padding: 10px 24px; border-radius: 24px; border: none;
+                   cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .action-btn:hover { background: #1ed760; }
+    .action-btn.secondary { background: #282828; color: #fff; }
+    .action-btn.secondary:hover { background: #333; }
+    #status { color: #b3b3b3; margin-top: 0.5rem; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>🎧 Magdalena | Live at La Estacion Còrdoba | 2025</h1>
+  <p class="subtitle">33 tracks detected</p>
+
+  <div class="actions">
+    <button class="action-btn" onclick="openAll()">▶ Open All in Spotify</button>
+    <button class="action-btn secondary" onclick="openNext()">⏭ Open Next</button>
+    <button class="action-btn secondary" onclick="copyList()">📋 Copy Track List</button>
+  </div>
+  <p id="status"></p>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Time</th><th>Track</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>[04:00]</td><td>Ion Ludwig - Classilion</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Ion%20Ludwig%20Classilion" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>2</td><td>[10:00]</td><td>Lecco - Keep Riddin</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Lecco%20Keep%20Riddin" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>3</td><td>[14:00]</td><td>MIKAA & Joui - Talk My Talk (Original)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/MIKAA%20%26%20Joui%20Talk%20My%20Talk%20%28Original%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>4</td><td>[18:30]</td><td>Cloz & RIKO & GUGGA - Make Money, No Friends (feat. Saintglum)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Cloz%20%26%20RIKO%20%26%20GUGGA%20Make%20Money%2C%20No%20Friends%20%28feat.%20Saintglum%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>5</td><td>[22:30]</td><td>Stephan V. Star - Black Waters</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Stephan%20V.%20Star%20Black%20Waters" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>6</td><td>[24:00]</td><td>Boris Way & Zans - More</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Boris%20Way%20%26%20Zans%20More" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>7</td><td>[29:30]</td><td>DJ Stephano & DJ Adrianno - Culori (feat. ADDA) [N-Tone Remix]</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/DJ%20Stephano%20%26%20DJ%20Adrianno%20Culori%20%28feat.%20ADDA%29%20%5BN-Tone%20Remix%5D" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>8</td><td>[30:00]</td><td>Villon - Knusperstück</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Villon%20Knusperst%C3%BCck" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>9</td><td>[31:30]</td><td>MEDUZA - Paradise (feat. Dermot Kennedy) [Cassian Remix]</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/MEDUZA%20Paradise%20%28feat.%20Dermot%20Kennedy%29%20%5BCassian%20Remix%5D" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>10</td><td>[32:00]</td><td>R.A.W. - Unbe (Erick 'More' Mix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/R.A.W.%20Unbe%20%28Erick%20%27More%27%20Mix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>11</td><td>[32:30]</td><td>Chris Fortier & Neil Kolo - All I Got (Chris Fortier 20yr Dub)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Chris%20Fortier%20%26%20Neil%20Kolo%20All%20I%20Got%20%28Chris%20Fortier%2020yr%20Dub%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>12</td><td>[35:00]</td><td>Oxia - Domino</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Oxia%20Domino" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>13</td><td>[35:30]</td><td>Glenn Morrison - Contact</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Glenn%20Morrison%20Contact" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>14</td><td>[41:00]</td><td>Paul Morena - Here Goes</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Paul%20Morena%20Here%20Goes" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>15</td><td>[50:30]</td><td>Mr. G - Transient</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Mr.%20G%20Transient" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>16</td><td>[54:00]</td><td>Kings of Tomorrow - Finally (Inspired Edit) [Extended Mix]</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Kings%20of%20Tomorrow%20Finally%20%28Inspired%20Edit%29%20%5BExtended%20Mix%5D" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>17</td><td>[55:30]</td><td>PAX & Rui Da Silva - Touch Me (Pax & Rui Da Silva Extended Version)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/PAX%20%26%20Rui%20Da%20Silva%20Touch%20Me%20%28Pax%20%26%20Rui%20Da%20Silva%20Extended%20Version%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>18</td><td>[61:00]</td><td>ATB - 9 P.M. (Till I Come)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/ATB%209%20P.M.%20%28Till%20I%20Come%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>19</td><td>[61:30]</td><td>Oliver Heldens & Kate Ryan - Désenchantée (Oli’s EuroRave Mix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Oliver%20Heldens%20%26%20Kate%20Ryan%20D%C3%A9senchant%C3%A9e%20%28Oli%E2%80%99s%20EuroRave%20Mix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>20</td><td>[62:30]</td><td>Rank 1 - Airwave (Radio Vocal Edit)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Rank%201%20Airwave%20%28Radio%20Vocal%20Edit%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>21</td><td>[63:30]</td><td>DEADWALKMAN - Rhythm 11</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/DEADWALKMAN%20Rhythm%2011" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>22</td><td>[65:30]</td><td>Energy 52 - Café Del Mar (Three 'n One Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Energy%2052%20Caf%C3%A9%20Del%20Mar%20%28Three%20%27n%20One%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>23</td><td>[66:00]</td><td>Alice Deejay - Better Off Alone</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Alice%20Deejay%20Better%20Off%20Alone" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>24</td><td>[66:30]</td><td>Max Styler & Deomid - Get Down</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Max%20Styler%20%26%20Deomid%20Get%20Down" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>25</td><td>[67:00]</td><td>Faithless - Salva Mea</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Faithless%20Salva%20Mea" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>26</td><td>[68:00]</td><td>Joe Mesmar - Feeling My Mind</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Joe%20Mesmar%20Feeling%20My%20Mind" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>27</td><td>[69:30]</td><td>Dario G - Sunchyme</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Dario%20G%20Sunchyme" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>28</td><td>[70:30]</td><td>Paul van Dyk - For An Angel (PvD's E-Werk Club Mix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Paul%20van%20Dyk%20For%20An%20Angel%20%28PvD%27s%20E-Werk%20Club%20Mix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>29</td><td>[71:00]</td><td>Carl Bee - Somethin' Like This</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Carl%20Bee%20Somethin%27%20Like%20This" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>30</td><td>[76:00]</td><td>DjBleasek - Mystic House Ritual of the Sun</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/DjBleasek%20Mystic%20House%20Ritual%20of%20the%20Sun" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>31</td><td>[87:30]</td><td>LynX Producer - Nỗi Nhớ Trong Lòng</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/LynX%20Producer%20N%E1%BB%97i%20Nh%E1%BB%9B%20Trong%20L%C3%B2ng" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>32</td><td>[89:00]</td><td>Arjona Moran - Yesterday</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Arjona%20Moran%20Yesterday" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>33</td><td>[90:00]</td><td>Soda Stereo - De Música Ligera (SÉP7IMO DÍA)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Soda%20Stereo%20De%20M%C3%BAsica%20Ligera%20%28S%C3%89P7IMO%20D%C3%8DA%29" target="_blank" class="open-btn">Open</a></td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const urls = ["https://open.spotify.com/search/Ion%20Ludwig%20Classilion", "https://open.spotify.com/search/Lecco%20Keep%20Riddin", "https://open.spotify.com/search/MIKAA%20%26%20Joui%20Talk%20My%20Talk%20%28Original%29", "https://open.spotify.com/search/Cloz%20%26%20RIKO%20%26%20GUGGA%20Make%20Money%2C%20No%20Friends%20%28feat.%20Saintglum%29", "https://open.spotify.com/search/Stephan%20V.%20Star%20Black%20Waters", "https://open.spotify.com/search/Boris%20Way%20%26%20Zans%20More", "https://open.spotify.com/search/DJ%20Stephano%20%26%20DJ%20Adrianno%20Culori%20%28feat.%20ADDA%29%20%5BN-Tone%20Remix%5D", "https://open.spotify.com/search/Villon%20Knusperst%C3%BCck", "https://open.spotify.com/search/MEDUZA%20Paradise%20%28feat.%20Dermot%20Kennedy%29%20%5BCassian%20Remix%5D", "https://open.spotify.com/search/R.A.W.%20Unbe%20%28Erick%20%27More%27%20Mix%29", "https://open.spotify.com/search/Chris%20Fortier%20%26%20Neil%20Kolo%20All%20I%20Got%20%28Chris%20Fortier%2020yr%20Dub%29", "https://open.spotify.com/search/Oxia%20Domino", "https://open.spotify.com/search/Glenn%20Morrison%20Contact", "https://open.spotify.com/search/Paul%20Morena%20Here%20Goes", "https://open.spotify.com/search/Mr.%20G%20Transient", "https://open.spotify.com/search/Kings%20of%20Tomorrow%20Finally%20%28Inspired%20Edit%29%20%5BExtended%20Mix%5D", "https://open.spotify.com/search/PAX%20%26%20Rui%20Da%20Silva%20Touch%20Me%20%28Pax%20%26%20Rui%20Da%20Silva%20Extended%20Version%29", "https://open.spotify.com/search/ATB%209%20P.M.%20%28Till%20I%20Come%29", "https://open.spotify.com/search/Oliver%20Heldens%20%26%20Kate%20Ryan%20D%C3%A9senchant%C3%A9e%20%28Oli%E2%80%99s%20EuroRave%20Mix%29", "https://open.spotify.com/search/Rank%201%20Airwave%20%28Radio%20Vocal%20Edit%29", "https://open.spotify.com/search/DEADWALKMAN%20Rhythm%2011", "https://open.spotify.com/search/Energy%2052%20Caf%C3%A9%20Del%20Mar%20%28Three%20%27n%20One%20Remix%29", "https://open.spotify.com/search/Alice%20Deejay%20Better%20Off%20Alone", "https://open.spotify.com/search/Max%20Styler%20%26%20Deomid%20Get%20Down", "https://open.spotify.com/search/Faithless%20Salva%20Mea", "https://open.spotify.com/search/Joe%20Mesmar%20Feeling%20My%20Mind", "https://open.spotify.com/search/Dario%20G%20Sunchyme", "https://open.spotify.com/search/Paul%20van%20Dyk%20For%20An%20Angel%20%28PvD%27s%20E-Werk%20Club%20Mix%29", "https://open.spotify.com/search/Carl%20Bee%20Somethin%27%20Like%20This", "https://open.spotify.com/search/DjBleasek%20Mystic%20House%20Ritual%20of%20the%20Sun", "https://open.spotify.com/search/LynX%20Producer%20N%E1%BB%97i%20Nh%E1%BB%9B%20Trong%20L%C3%B2ng", "https://open.spotify.com/search/Arjona%20Moran%20Yesterday", "https://open.spotify.com/search/Soda%20Stereo%20De%20M%C3%BAsica%20Ligera%20%28S%C3%89P7IMO%20D%C3%8DA%29"];
+    let currentIndex = 0;
+
+    function openAll() {
+      if (!confirm('This will open ' + urls.length + ' tabs. Continue?')) return;
+      const status = document.getElementById('status');
+      let opened = 0;
+      urls.forEach((url, i) => {
+        setTimeout(() => {
+          window.open(url, '_blank');
+          opened++;
+          status.textContent = 'Opened ' + opened + '/' + urls.length + '...';
+        }, i * 800);  // 800ms between each to avoid popup blocker
+      });
+    }
+
+    function openNext() {
+      if (currentIndex >= urls.length) {
+        document.getElementById('status').textContent = 'All tracks opened!';
+        currentIndex = 0;
+        return;
+      }
+      window.open(urls[currentIndex], '_blank');
+      document.getElementById('status').textContent = 'Opened track ' + (currentIndex + 1) + '/' + urls.length;
+      currentIndex++;
+    }
+
+    function copyList() {
+      const lines = [];
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        lines.push(cells[0].textContent + '. ' + cells[2].textContent);
+      });
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        document.getElementById('status').textContent = 'Track list copied to clipboard!';
+      });
+    }
+  </script>
+</body>
+</html>

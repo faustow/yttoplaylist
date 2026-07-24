@@ -29,6 +29,7 @@ from shazamio.client import HTTPClient
 from shazamio.exceptions import BadMethod
 from shazamio.utils import validate_json
 from spotify_search import search_tracks as spotify_search_tracks
+from spotify_search import generate_spotify_html, create_spotify_playlist
 
 # Suppress pydub's noisy ffmpeg warnings (shazamio uses pydub internally)
 warnings.filterwarnings("ignore", message=".*Couldn't find ffmpeg.*")
@@ -446,7 +447,12 @@ async def main():
     )
     parser.add_argument(
         "--spotify", action="store_true",
-        help="Include Spotify URIs/search links in output",
+        help="Search Spotify for each track and generate an HTML file to open them",
+    )
+    parser.add_argument(
+        "--spotify-playlist", metavar="NAME",
+        help="Create a Spotify playlist with the given name (requires SPOTIPY_CLIENT_ID "
+             "and SPOTIPY_CLIENT_SECRET env vars)",
     )
     parser.add_argument(
         "--json", action="store_true",
@@ -498,7 +504,8 @@ async def main():
         tracks = deduplicate_tracks(results)
 
         # Step 5: Search Spotify for each track
-        if args.spotify:
+        use_spotify = args.spotify or args.spotify_playlist
+        if use_spotify:
             logger.info("Searching Spotify for detected tracks...")
             tracks = await spotify_search_tracks(tracks)
 
@@ -506,16 +513,27 @@ async def main():
         safe_title = re.sub(r'[^\w\s-]', '', video_title).strip().replace(' ', '_')[:80]
         output_path = args.output or f"{safe_title}_tracklist.txt"
 
-        tracklist = format_tracklist(tracks, video_title, url_clean, include_spotify=args.spotify)
+        tracklist = format_tracklist(tracks, video_title, url_clean, include_spotify=use_spotify)
 
         with open(output_path, "w") as f:
             f.write(tracklist)
 
-        if args.spotify:
+        if use_spotify:
+            # Generate HTML file to open tracks in Spotify
+            html_path = generate_spotify_html(tracks, video_title, output_path)
+            logger.info(f"Spotify HTML saved to: {html_path}")
+
+            # Also save the text version
             spotify_path = output_path.rsplit(".", 1)[0] + "_spotify.txt"
             with open(spotify_path, "w") as f:
                 f.write(format_spotify_search_urls(tracks))
             logger.info(f"Spotify links saved to: {spotify_path}")
+
+        # Create Spotify playlist via OAuth if requested
+        if args.spotify_playlist:
+            playlist_url = create_spotify_playlist(tracks, args.spotify_playlist)
+            if playlist_url:
+                print(f"\n  Spotify playlist created: {playlist_url}")
 
         if args.json:
             save_json_results(tracks, output_path)
@@ -535,6 +553,8 @@ async def main():
             print(f"  {i:2d}. [{track['timestamp']}] {track['artist']} - {track['title']}")
         print()
         print(f"Saved to: {output_path}")
+        if use_spotify:
+            print(f"Spotify: open {output_path.rsplit('.', 1)[0] + '_spotify.html'} in your browser")
         print(f"Total tracks found: {len(tracks)}")
 
 
