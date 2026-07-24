@@ -12,6 +12,7 @@ Usage:
 """
 import json
 import os
+import re
 import sys
 import webbrowser
 
@@ -87,12 +88,48 @@ def main():
     not_found = []
     for i, track in enumerate(tracks, 1):
         q = f"{track['artist']} {track['title']}"
-        results = sp.search(q=q, type="track", limit=1)
+        results = sp.search(q=q, type="track", limit=5)
         items = results.get("tracks", {}).get("items", [])
-        if items:
-            uris.append(items[0]["uri"])
-            name = items[0]["name"]
-            artists = ", ".join(a["name"] for a in items[0]["artists"])
+
+        # Find best match: at least the artist name or title must partially match
+        original_artist = track["artist"].lower()
+        original_title = re.sub(r'\s*[\(\[].*?[\)\]]', '', track["title"]).lower().strip()
+        matched = None
+        for item in items:
+            item_artists = " ".join(a["name"].lower() for a in item["artists"])
+            item_title = item["name"].lower()
+
+            # Check if any significant word from the original artist appears in the result
+            artist_words = [w for w in re.split(r'[\s&,]+', original_artist) if len(w) > 2]
+            artist_match = any(w in item_artists for w in artist_words)
+
+            # Check if any significant word from the original title appears in the result
+            title_words = [w for w in original_title.split() if len(w) > 2]
+            title_match = any(w in item_title for w in title_words)
+
+            if artist_match and title_match:
+                matched = item
+                break
+
+        # If strict match failed, try with just artist match (common for remixes
+        # where the title differs a lot). Require at least half of artist words to match.
+        if not matched:
+            for item in items:
+                item_artists = " ".join(a["name"].lower() for a in item["artists"])
+                artist_words = [w for w in re.split(r'[\s&,]+', original_artist) if len(w) > 2]
+                matched_count = sum(1 for w in artist_words if w in item_artists)
+                # Need at least half the words AND at least 2 words matched (or all if fewer than 2)
+                threshold = max(2, (len(artist_words) + 1) // 2)
+                if len(artist_words) <= 2:
+                    threshold = len(artist_words)
+                if matched_count >= threshold:
+                    matched = item
+                    break
+
+        if matched:
+            uris.append(matched["uri"])
+            name = matched["name"]
+            artists = ", ".join(a["name"] for a in matched["artists"])
             print(f"  {i:2d}. FOUND: {artists} - {name}")
         else:
             not_found.append(f"{track['artist']} - {track['title']}")

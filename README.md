@@ -30,23 +30,11 @@ python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c"
 # With Spotify integration (generates an HTML page to open all tracks)
 python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify
 
-# Create a Spotify playlist directly in your account (requires OAuth setup, see below)
-python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify-playlist "Magdalena Córdoba 2025"
-
-# Also save as JSON
+# Also save as JSON (needed for create_playlist.py)
 python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --spotify --json
-
-# If YouTube rate-limits you
-python yttoplaylist.py URL --cookies-from-browser chrome
-
-# Keep the downloaded audio file
-python yttoplaylist.py URL --keep-audio
-
-# Verbose (show unmatched segments too)
-python yttoplaylist.py URL -v
 ```
 
-## Spotify integration
+## Getting tracks into Spotify
 
 ### Option 1: HTML opener (no setup needed)
 
@@ -57,29 +45,45 @@ Pass `--spotify` and the tool generates an HTML file you open in your browser:
 - **Copy Track List** — copies the full tracklist to your clipboard
 - Individual **Open** button per track
 
-No API keys, no accounts, no OAuth. Just open the HTML file.
-
 ### Option 2: Auto-create playlist (one-time setup)
 
-Pass `--spotify-playlist "My Playlist Name"` to create a real playlist in your Spotify account.
+Use `create_playlist.py` to create a real playlist directly in your Spotify account:
 
-One-time setup:
-1. Go to https://developer.spotify.com/dashboard
-2. Create an app (name: "yttoplaylist", any description)
-3. In Settings, add `http://localhost:8888/callback` as Redirect URI
-4. Copy the Client ID and Client Secret
-5. Set environment variables:
+```bash
+# First, run yttoplaylist with --json to generate the tracklist JSON
+python yttoplaylist.py "https://www.youtube.com/watch?v=XR7771GXI1c" --json
+
+# Then create the playlist
+python create_playlist.py tracklist.json "My Playlist Name"
+```
+
+**One-time setup:**
+
+1. Go to https://developer.spotify.com/dashboard and create an app
+   - Name: `yttoplaylist`
+   - Redirect URI: `https://127.0.0.1:8888/callback`
+   - Select "Web API"
+2. Copy the Client ID and Client Secret from Settings
+3. Set environment variables (add to your `~/.zshrc`):
 
 ```bash
 export SPOTIPY_CLIENT_ID="your-client-id"
 export SPOTIPY_CLIENT_SECRET="your-client-secret"
 ```
 
-The first run will open a browser window for you to authorize. After that, the token is cached.
+4. First run opens your browser for authorization. Spotify redirects to a page that won't load — copy the full URL from the address bar and pass it as the third argument:
+
+```bash
+python create_playlist.py tracklist.json "Playlist Name" "https://127.0.0.1:8888/callback?code=..."
+```
+
+After the first authorization, the token is cached and subsequent runs work without browser interaction.
+
+**Smart matching**: The search validates that Spotify results actually match the detected artist and title, so underground tracks that aren't on Spotify are reported as "NOT FOUND" instead of adding wrong songs to the playlist.
 
 ## Example output
 
-Magdalena | Live at La Estación Córdoba | 2025 (90 min set → 33 tracks detected):
+Magdalena | Live at La Estación Córdoba | 2025 (90 min set → 33 tracks detected, 29 found on Spotify):
 
 ```
  1. [04:00] Ion Ludwig - Classilion
@@ -123,12 +127,21 @@ Shazam's API has an undocumented rate limit (~20 requests/minute). The tool proc
 
 If a 429 response is received anyway, the tool retries with exponential backoff (2s → 4s → 8s → 16s → 32s).
 
-## Tips
+## Other options
 
-- **Accuracy vs speed**: The default settings (interval=30, segment=20) give good coverage. Increase `--interval` to 45 or 60 for faster but less thorough scans.
-- **Transitions**: Tracks playing during DJ transitions may not be detected — Shazam needs ~10s of clean audio. The dense sampling compensates by trying multiple points per track.
-- **Underground tracks**: Very obscure or unreleased tracks won't be in Shazam's database. Gaps in the tracklist usually indicate underground/white-label material.
-- **Long sets**: A 2-hour set produces ~240 segments and takes ~12 minutes to process.
+```bash
+# If YouTube rate-limits you
+python yttoplaylist.py URL --cookies-from-browser chrome
+
+# Keep the downloaded audio file
+python yttoplaylist.py URL --keep-audio
+
+# Verbose (show unmatched segments too)
+python yttoplaylist.py URL -v
+
+# Faster but less thorough scan
+python yttoplaylist.py URL --interval 60
+```
 
 ## Use case
 
