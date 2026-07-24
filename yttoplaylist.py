@@ -80,15 +80,24 @@ class SSLHTTPClient(HTTPClient):
                 raise BadMethod("Accept only GET/POST")
 
 
-def download_audio(url: str, output_dir: str) -> tuple[str, str]:
+def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tuple[str, str]:
     """Download audio from YouTube URL using yt-dlp. Returns (audio_path, video_title)."""
     logger.info(f"Downloading audio from: {url}")
 
+    cookie_args = ["--cookies-from-browser", cookies_browser] if cookies_browser else []
+
     # First get the title
     result = subprocess.run(
-        ["yt-dlp", "--print", "title", "--no-download", url],
-        capture_output=True, text=True, check=True,
+        ["yt-dlp", "--print", "title", "--no-download", *cookie_args, url],
+        capture_output=True, text=True,
     )
+    if result.returncode != 0:
+        # Check for common errors
+        if "429" in result.stderr or "bot" in result.stderr.lower():
+            logger.error("YouTube rate limited us (429). Try again in a few minutes, or use --cookies-from-browser chrome")
+        else:
+            logger.error(f"yt-dlp failed to get title:\n{result.stderr}")
+        raise RuntimeError("Failed to get video title")
     title = result.stdout.strip()
 
     # Download as mp3
@@ -101,13 +110,17 @@ def download_audio(url: str, output_dir: str) -> tuple[str, str]:
             "--audio-quality", "5",      # medium quality (good enough for fingerprinting)
             "-o", output_path,
             "--no-playlist",             # single video only
+            *cookie_args,
             url,
         ],
         capture_output=True,
         text=True,
     )
     if dl_result.returncode != 0:
-        logger.error(f"yt-dlp failed:\n{dl_result.stderr}")
+        if "429" in dl_result.stderr or "bot" in dl_result.stderr.lower():
+            logger.error("YouTube rate limited us (429). Try again in a few minutes, or use --cookies-from-browser chrome")
+        else:
+            logger.error(f"yt-dlp download failed:\n{dl_result.stderr}")
         raise RuntimeError(f"yt-dlp download failed (exit code {dl_result.returncode})")
 
     if not os.path.exists(output_path):
@@ -416,6 +429,11 @@ async def main():
         "-v", "--verbose", action="store_true",
         help="Verbose output (show unmatched segments too)",
     )
+    parser.add_argument(
+        "--cookies-from-browser",
+        help="Browser to extract cookies from (e.g., 'chrome', 'firefox'). "
+             "Useful when YouTube rate-limits or asks to sign in.",
+    )
 
     args = parser.parse_args()
 
@@ -429,7 +447,7 @@ async def main():
 
     with tempfile.TemporaryDirectory(prefix="yttoplaylist_") as tmp_dir:
         # Step 1: Download audio
-        audio_path, video_title = download_audio(url, tmp_dir)
+        audio_path, video_title = download_audio(url, tmp_dir, cookies_browser=args.cookies_from_browser)
 
         # Step 2: Split into segments
         segments = split_audio(
