@@ -153,8 +153,8 @@ def get_audio_duration(audio_path: str) -> float:
 def split_audio(
     audio_path: str,
     output_dir: str,
-    segment_duration: int = 30,
-    interval: int = 60,
+    segment_duration: int = 20,
+    interval: int = 30,
 ) -> list[tuple[str, int]]:
     """
     Split audio into segments for recognition using ffmpeg.
@@ -162,8 +162,8 @@ def split_audio(
     Args:
         audio_path: Path to the audio file
         output_dir: Directory for segment files
-        segment_duration: Length of each segment in seconds
-        interval: How often to sample in seconds
+        segment_duration: Length of each audio clip sent to Shazam (default: 20s)
+        interval: How often to sample (default: every 30s for dense coverage)
 
     Returns:
         List of (segment_path, start_time_seconds)
@@ -414,16 +414,16 @@ async def main():
         help="Output file path (default: <video_title>_tracklist.txt)",
     )
     parser.add_argument(
-        "--interval", type=int, default=60,
-        help="How often to sample the audio in seconds (default: 60)",
+        "--interval", type=int, default=30,
+        help="How often to sample the audio in seconds (default: 30)",
     )
     parser.add_argument(
-        "--segment-duration", type=int, default=30,
-        help="Length of each audio segment sent to Shazam in seconds (default: 30)",
+        "--segment-duration", type=int, default=20,
+        help="Length of each audio segment sent to Shazam in seconds (default: 20)",
     )
     parser.add_argument(
-        "--concurrent", type=int, default=3,
-        help="Max concurrent Shazam requests (default: 3)",
+        "--concurrent", type=int, default=5,
+        help="Max concurrent Shazam requests (default: 5)",
     )
     parser.add_argument(
         "--spotify", action="store_true",
