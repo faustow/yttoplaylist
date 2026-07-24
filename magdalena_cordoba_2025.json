@@ -1,0 +1,299 @@
+[
+  {
+    "start_time": 240,
+    "timestamp": "04:00",
+    "title": "Classilion",
+    "artist": "Ion Ludwig",
+    "shazam_key": "461120203",
+    "spotify_uri": "spotify:search:Classilion%20Ion%20Ludwig",
+    "apple_url": null
+  },
+  {
+    "start_time": 600,
+    "timestamp": "10:00",
+    "title": "Keep Riddin",
+    "artist": "Lecco",
+    "shazam_key": "860394241",
+    "spotify_uri": "spotify:search:Keep%20Riddin%20Lecco",
+    "apple_url": null
+  },
+  {
+    "start_time": 840,
+    "timestamp": "14:00",
+    "title": "Talk My Talk (Original)",
+    "artist": "MIKAA & Joui",
+    "shazam_key": "858168685",
+    "spotify_uri": "spotify:search:Talk%20My%20Talk%20%28Original%29%20MIKAA",
+    "apple_url": null
+  },
+  {
+    "start_time": 1110,
+    "timestamp": "18:30",
+    "title": "Make Money, No Friends (feat. Saintglum)",
+    "artist": "Cloz & RIKO & GUGGA",
+    "shazam_key": "887092036",
+    "spotify_uri": "spotify:search:Make%20Money%2C%20No%20Friends%20%28feat.%20Saintglum%29%20Cloz",
+    "apple_url": null
+  },
+  {
+    "start_time": 1350,
+    "timestamp": "22:30",
+    "title": "Black Waters",
+    "artist": "Stephan V. Star",
+    "shazam_key": "62420207",
+    "spotify_uri": "spotify:search:Black%20Waters%20Stephan%20V.%20Star",
+    "apple_url": null
+  },
+  {
+    "start_time": 1440,
+    "timestamp": "24:00",
+    "title": "More",
+    "artist": "Boris Way & Zans",
+    "shazam_key": "847505778",
+    "spotify_uri": "spotify:search:More%20Boris%20Way",
+    "apple_url": null
+  },
+  {
+    "start_time": 1770,
+    "timestamp": "29:30",
+    "title": "Culori (feat. ADDA) [N-Tone Remix]",
+    "artist": "DJ Stephano & DJ Adrianno",
+    "shazam_key": "58568727",
+    "spotify_uri": "spotify:search:Culori%20%28feat.%20ADDA%29%20%5BN-Tone%20Remix%5D%20DJ%20Stephano",
+    "apple_url": null
+  },
+  {
+    "start_time": 1800,
+    "timestamp": "30:00",
+    "title": "Knusperstück",
+    "artist": "Villon",
+    "shazam_key": "221938460",
+    "spotify_uri": "spotify:search:Knusperst%C3%BCck%20Villon",
+    "apple_url": null
+  },
+  {
+    "start_time": 1890,
+    "timestamp": "31:30",
+    "title": "Paradise (feat. Dermot Kennedy) [Cassian Remix]",
+    "artist": "MEDUZA",
+    "shazam_key": "546331521",
+    "spotify_uri": "spotify:search:Paradise%20%28feat.%20Dermot%20Kennedy%29%20%5BCassian%20Remix%5D%20MEDUZA",
+    "apple_url": null
+  },
+  {
+    "start_time": 1920,
+    "timestamp": "32:00",
+    "title": "Unbe (Erick 'More' Mix)",
+    "artist": "R.A.W.",
+    "shazam_key": "53999685",
+    "spotify_uri": "spotify:search:Unbe%20%28Erick%20%27More%27%20Mix%29%20R.A.W.",
+    "apple_url": null
+  },
+  {
+    "start_time": 1950,
+    "timestamp": "32:30",
+    "title": "All I Got (Chris Fortier 20yr Dub)",
+    "artist": "Chris Fortier & Neil Kolo",
+    "shazam_key": "297000567",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 2100,
+    "timestamp": "35:00",
+    "title": "Domino",
+    "artist": "Oxia",
+    "shazam_key": "44454930",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 2130,
+    "timestamp": "35:30",
+    "title": "Contact",
+    "artist": "Glenn Morrison",
+    "shazam_key": "45794684",
+    "spotify_uri": "spotify:search:Contact%20Glenn%20Morrison",
+    "apple_url": null
+  },
+  {
+    "start_time": 2460,
+    "timestamp": "41:00",
+    "title": "Here Goes",
+    "artist": "Paul Morena",
+    "shazam_key": "403430298",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 3030,
+    "timestamp": "50:30",
+    "title": "Transient",
+    "artist": "Mr. G",
+    "shazam_key": "318809175",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 3240,
+    "timestamp": "54:00",
+    "title": "Finally (Inspired Edit) [Extended Mix]",
+    "artist": "Kings of Tomorrow",
+    "shazam_key": "122396790",
+    "spotify_uri": "spotify:search:Finally%20%28Inspired%20Edit%29%20%5BExtended%20Mix%5D%20Kings%20of%20Tomorrow",
+    "apple_url": null
+  },
+  {
+    "start_time": 3330,
+    "timestamp": "55:30",
+    "title": "Touch Me (Pax & Rui Da Silva Extended Version)",
+    "artist": "PAX & Rui Da Silva",
+    "shazam_key": "518067641",
+    "spotify_uri": "spotify:search:Touch%20Me%20%28Pax%20%26%20Rui%20Da%20Silva%20Extended%20Version%29%20PAX",
+    "apple_url": null
+  },
+  {
+    "start_time": 3660,
+    "timestamp": "61:00",
+    "title": "9 P.M. (Till I Come)",
+    "artist": "ATB",
+    "shazam_key": "20066191",
+    "spotify_uri": "spotify:search:9%20P.M.%20%28Till%20I%20Come%29%20ATB",
+    "apple_url": null
+  },
+  {
+    "start_time": 3690,
+    "timestamp": "61:30",
+    "title": "Désenchantée (Oli’s EuroRave Mix)",
+    "artist": "Oliver Heldens & Kate Ryan",
+    "shazam_key": "654099305",
+    "spotify_uri": "spotify:search:D%C3%A9senchant%C3%A9e%20%28Oli%E2%80%99s%20EuroRave%20Mix%29%20Oliver%20Heldens",
+    "apple_url": null
+  },
+  {
+    "start_time": 3750,
+    "timestamp": "62:30",
+    "title": "Airwave (Radio Vocal Edit)",
+    "artist": "Rank 1",
+    "shazam_key": "45063022",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 3810,
+    "timestamp": "63:30",
+    "title": "Rhythm 11",
+    "artist": "DEADWALKMAN",
+    "shazam_key": "472062280",
+    "spotify_uri": "spotify:search:Rhythm%2011%20DEADWALKMAN",
+    "apple_url": null
+  },
+  {
+    "start_time": 3930,
+    "timestamp": "65:30",
+    "title": "Café Del Mar (Three 'n One Remix)",
+    "artist": "Energy 52",
+    "shazam_key": "20070830",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 3960,
+    "timestamp": "66:00",
+    "title": "Better Off Alone",
+    "artist": "Alice Deejay",
+    "shazam_key": "229252",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 3990,
+    "timestamp": "66:30",
+    "title": "Get Down",
+    "artist": "Max Styler & Deomid",
+    "shazam_key": "835170613",
+    "spotify_uri": "spotify:search:Get%20Down%20Max%20Styler",
+    "apple_url": null
+  },
+  {
+    "start_time": 4020,
+    "timestamp": "67:00",
+    "title": "Salva Mea",
+    "artist": "Faithless",
+    "shazam_key": "67437814",
+    "spotify_uri": "spotify:search:Salva%20Mea%20Faithless",
+    "apple_url": null
+  },
+  {
+    "start_time": 4080,
+    "timestamp": "68:00",
+    "title": "Feeling My Mind",
+    "artist": "Joe Mesmar",
+    "shazam_key": "712851209",
+    "spotify_uri": "spotify:search:Feeling%20My%20Mind%20Joe%20Mesmar",
+    "apple_url": null
+  },
+  {
+    "start_time": 4170,
+    "timestamp": "69:30",
+    "title": "Sunchyme",
+    "artist": "Dario G",
+    "shazam_key": "61121498",
+    "spotify_uri": "spotify:search:Sunchyme%20Dario%20G",
+    "apple_url": null
+  },
+  {
+    "start_time": 4230,
+    "timestamp": "70:30",
+    "title": "For An Angel (PvD's E-Werk Club Mix)",
+    "artist": "Paul van Dyk",
+    "shazam_key": "54627801",
+    "spotify_uri": "spotify:search:For%20An%20Angel%20%28PvD%27s%20E-Werk%20Club%20Mix%29%20Paul%20van%20Dyk",
+    "apple_url": null
+  },
+  {
+    "start_time": 4260,
+    "timestamp": "71:00",
+    "title": "Somethin' Like This",
+    "artist": "Carl Bee",
+    "shazam_key": "841433581",
+    "spotify_uri": "spotify:search:Somethin%27%20Like%20This%20Carl%20Bee",
+    "apple_url": null
+  },
+  {
+    "start_time": 4560,
+    "timestamp": "76:00",
+    "title": "Mystic House Ritual of the Sun",
+    "artist": "DjBleasek",
+    "shazam_key": "846159429",
+    "spotify_uri": "spotify:search:Mystic%20House%20Ritual%20of%20the%20Sun%20DjBleasek",
+    "apple_url": null
+  },
+  {
+    "start_time": 5250,
+    "timestamp": "87:30",
+    "title": "Nỗi Nhớ Trong Lòng",
+    "artist": "LynX Producer",
+    "shazam_key": "872140039",
+    "spotify_uri": "spotify:search:N%E1%BB%97i%20Nh%E1%BB%9B%20Trong%20L%C3%B2ng%20LynX%20Producer",
+    "apple_url": null
+  },
+  {
+    "start_time": 5340,
+    "timestamp": "89:00",
+    "title": "Yesterday",
+    "artist": "Arjona Moran",
+    "shazam_key": "520545504",
+    "spotify_uri": null,
+    "apple_url": null
+  },
+  {
+    "start_time": 5400,
+    "timestamp": "90:00",
+    "title": "De Música Ligera (SÉP7IMO DÍA)",
+    "artist": "Soda Stereo",
+    "shazam_key": "342349260",
+    "spotify_uri": "spotify:search:De%20M%C3%BAsica%20Ligera%20%28S%C3%89P7IMO%20D%C3%8DA%29%20Soda%20Stereo",
+    "apple_url": null
+  }
+]
