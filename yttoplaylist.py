@@ -223,14 +223,17 @@ def split_audio(
 
 async def recognize_segments(
     segments: list[tuple[str, int]],
-    max_concurrent: int = 3,
+    request_delay: float = 3.0,
 ) -> list[dict]:
     """
     Recognize songs in audio segments using Shazam.
 
+    Processes segments SEQUENTIALLY with a fixed delay between requests
+    to stay well under Shazam's rate limit (~20 req/min).
+
     Args:
         segments: List of (segment_path, start_time_seconds)
-        max_concurrent: Max concurrent Shazam requests
+        request_delay: Seconds to wait between each Shazam request (default: 3.0)
 
     Returns:
         List of recognition results with timing info
@@ -238,92 +241,79 @@ async def recognize_segments(
     shazam = Shazam(
         http_client=SSLHTTPClient(
             retry_options=ExponentialRetry(
-                attempts=5,
-                max_timeout=30.0,
-                statuses={500, 502, 503, 504, 429},
+                attempts=3,
+                max_timeout=15.0,
+                statuses={500, 502, 503, 504},
             ),
         ),
     )
     results = []
-    semaphore = asyncio.Semaphore(max_concurrent)
     total = len(segments)
-    completed = 0
     matched = 0
+    estimated_minutes = (total * request_delay) / 60
 
-    async def recognize_one(segment_path: str, start_time: int, index: int):
-        nonlocal completed, matched
-        async with semaphore:
-            # Small delay proportional to index within batch to stagger requests
-            await asyncio.sleep(0.5 * (index % max_concurrent))
-            timestamp = f"{start_time // 60:02d}:{start_time % 60:02d}"
-            try:
-                out = await asyncio.wait_for(
-                    shazam.recognize(segment_path),
-                    timeout=60,  # 60s max per segment
-                )
-                if out and "track" in out:
-                    track = out["track"]
-                    title = track.get("title", "Unknown")
-                    artist = track.get("subtitle", "Unknown")
-                    shazam_key = track.get("key", "")
+    logger.info(f"Recognizing {total} segments via Shazam (~{estimated_minutes:.0f} min at {request_delay}s/request)...")
 
-                    # Extract Spotify URI if available
-                    spotify_uri = None
-                    providers = track.get("hub", {}).get("providers", [])
-                    for provider in providers:
-                        if provider.get("type") == "SPOTIFY":
-                            actions = provider.get("actions", [])
-                            for action in actions:
-                                if action.get("type") == "uri":
-                                    spotify_uri = action.get("uri")
+    for i, (segment_path, start_time) in enumerate(segments):
+        timestamp = f"{start_time // 60:02d}:{start_time % 60:02d}"
+        try:
+            out = await asyncio.wait_for(
+                shazam.recognize(segment_path),
+                timeout=30,
+            )
+            if out and "track" in out:
+                track = out["track"]
+                title = track.get("title", "Unknown")
+                artist = track.get("subtitle", "Unknown")
+                shazam_key = track.get("key", "")
 
-                    # Extract Apple Music URL if available
-                    apple_url = None
-                    for provider in providers:
-                        if provider.get("type") == "APPLE":
-                            actions = provider.get("actions", [])
-                            for action in actions:
-                                if action.get("type") == "uri":
-                                    apple_url = action.get("uri")
+                # Extract Spotify URI if available
+                spotify_uri = None
+                providers = track.get("hub", {}).get("providers", [])
+                for provider in providers:
+                    if provider.get("type") == "SPOTIFY":
+                        actions = provider.get("actions", [])
+                        for action in actions:
+                            if action.get("type") == "uri":
+                                spotify_uri = action.get("uri")
 
-                    result = {
-                        "start_time": start_time,
-                        "timestamp": timestamp,
-                        "title": title,
-                        "artist": artist,
-                        "shazam_key": shazam_key,
-                        "spotify_uri": spotify_uri,
-                        "apple_url": apple_url,
-                    }
-                    results.append(result)
-                    matched += 1
-                    logger.info(f"  [{index + 1}/{total}] {timestamp} -> {artist} - {title}")
-                else:
-                    logger.debug(f"  [{index + 1}/{total}] {timestamp} -> No match")
-            except Exception as e:
-                logger.warning(f"  [{index + 1}/{total}] {timestamp} -> Error: {e}")
-            finally:
-                completed += 1
-                # Progress indicator on stderr (no newline)
-                pct = completed * 100 // total
-                bar = f"[{'#' * (pct // 5)}{'.' * (20 - pct // 5)}]"
-                print(f"\r  Progress: {bar} {completed}/{total} ({matched} matched)", end="", file=sys.stderr)
+                # Extract Apple Music URL if available
+                apple_url = None
+                for provider in providers:
+                    if provider.get("type") == "APPLE":
+                        actions = provider.get("actions", [])
+                        for action in actions:
+                            if action.get("type") == "uri":
+                                apple_url = action.get("uri")
 
-    logger.info(f"Recognizing {total} segments via Shazam...")
+                result = {
+                    "start_time": start_time,
+                    "timestamp": timestamp,
+                    "title": title,
+                    "artist": artist,
+                    "shazam_key": shazam_key,
+                    "spotify_uri": spotify_uri,
+                    "apple_url": apple_url,
+                }
+                results.append(result)
+                matched += 1
+                logger.info(f"  [{i + 1}/{total}] {timestamp} -> {artist} - {title}")
+            else:
+                logger.debug(f"  [{i + 1}/{total}] {timestamp} -> No match")
+        except Exception as e:
+            logger.warning(f"  [{i + 1}/{total}] {timestamp} -> Error: {e}")
 
-    # Process in sequential batches to avoid overwhelming the API
-    batch_size = max_concurrent
-    for batch_start in range(0, total, batch_size):
-        batch_end = min(batch_start + batch_size, total)
-        batch = [
-            recognize_one(seg_path, start_time, i)
-            for i, (seg_path, start_time) in enumerate(segments[batch_start:batch_end], batch_start)
-        ]
-        await asyncio.gather(*batch)
+        # Progress indicator
+        completed = i + 1
+        pct = completed * 100 // total
+        bar = f"[{'#' * (pct // 5)}{'.' * (20 - pct // 5)}]"
+        remaining = (total - completed) * request_delay
+        eta = f"{remaining / 60:.0f}m" if remaining > 60 else f"{remaining:.0f}s"
+        print(f"\r  Progress: {bar} {completed}/{total} ({matched} matched) ETA: {eta}  ", end="", file=sys.stderr)
 
-        # Delay between batches to avoid API rate limiting
-        if batch_end < total:
-            await asyncio.sleep(2.0)
+        # Fixed delay between requests — this is what keeps us under the rate limit
+        if i < total - 1:
+            await asyncio.sleep(request_delay)
 
     print(file=sys.stderr)  # newline after progress bar
 
@@ -455,10 +445,6 @@ async def main():
         help="Length of each audio segment sent to Shazam in seconds (default: 20)",
     )
     parser.add_argument(
-        "--concurrent", type=int, default=3,
-        help="Max concurrent Shazam requests per batch (default: 3)",
-    )
-    parser.add_argument(
         "--spotify", action="store_true",
         help="Include Spotify URIs/search links in output",
     )
@@ -502,7 +488,7 @@ async def main():
         )
 
         # Step 3: Recognize each segment
-        results = await recognize_segments(segments, max_concurrent=args.concurrent)
+        results = await recognize_segments(segments)
 
         if not results:
             logger.error("No tracks were recognized. Try with --interval 30 for denser sampling.")
