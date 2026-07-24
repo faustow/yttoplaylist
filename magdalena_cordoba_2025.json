@@ -1,0 +1,20 @@
+[
+  {
+    "start_time": 240,
+    "timestamp": "04:00",
+    "title": "Classilion",
+    "artist": "Ion Ludwig",
+    "shazam_key": "461120203",
+    "spotify_uri": "spotify:search:Classilion%20Ion%20Ludwig",
+    "apple_url": null
+  },
+  {
+    "start_time": 4410,
+    "timestamp": "73:30",
+    "title": "Somethin' Like This",
+    "artist": "Carl Bee",
+    "shazam_key": "841433581",
+    "spotify_uri": "spotify:search:Somethin%27%20Like%20This%20Carl%20Bee",
+    "apple_url": null
+  }
+]

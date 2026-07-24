@@ -287,11 +287,21 @@ async def recognize_segments(
                 print(f"\r  Progress: {bar} {completed}/{total} ({matched} matched)", end="", file=sys.stderr)
 
     logger.info(f"Recognizing {total} segments via Shazam...")
-    tasks = [
-        recognize_one(seg_path, start_time, i)
-        for i, (seg_path, start_time) in enumerate(segments)
-    ]
-    await asyncio.gather(*tasks)
+
+    # Process in sequential batches to avoid overwhelming the API
+    batch_size = max_concurrent
+    for batch_start in range(0, total, batch_size):
+        batch_end = min(batch_start + batch_size, total)
+        batch = [
+            recognize_one(seg_path, start_time, i)
+            for i, (seg_path, start_time) in enumerate(segments[batch_start:batch_end], batch_start)
+        ]
+        await asyncio.gather(*batch)
+
+        # Small delay between batches to avoid API rate limiting
+        if batch_end < total:
+            await asyncio.sleep(1.0)
+
     print(file=sys.stderr)  # newline after progress bar
 
     # Sort by start time
@@ -422,8 +432,8 @@ async def main():
         help="Length of each audio segment sent to Shazam in seconds (default: 20)",
     )
     parser.add_argument(
-        "--concurrent", type=int, default=5,
-        help="Max concurrent Shazam requests (default: 5)",
+        "--concurrent", type=int, default=3,
+        help="Max concurrent Shazam requests per batch (default: 3)",
     )
     parser.add_argument(
         "--spotify", action="store_true",
