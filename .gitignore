@@ -1,0 +1,28 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Audio files
+*.mp3
+*.ogg
+*.wav
+*.m4a
+
+# Output files
+*_tracklist.txt
+*_tracklist.json
+*_spotify.txt
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
