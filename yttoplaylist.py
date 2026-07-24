@@ -12,13 +12,20 @@ import json
 import logging
 import os
 import re
+import ssl
 import subprocess
 import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
 
+import certifi
+import aiohttp
+from aiohttp_retry import RetryClient, ExponentialRetry
 from shazamio import Shazam
+from shazamio.client import HTTPClient
+from shazamio.exceptions import BadMethod, FailedDecodeJson
+from shazamio.utils import validate_json
 
 logging.basicConfig(
     level=logging.INFO,
@@ -26,6 +33,29 @@ logging.basicConfig(
     datefmt="%H:%M:%S",
 )
 logger = logging.getLogger(__name__)
+
+# SSL context using certifi certificates (fixes macOS Python SSL issues)
+SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+
+
+class SSLHTTPClient(HTTPClient):
+    """HTTPClient that uses certifi SSL certificates for macOS compatibility."""
+
+    async def request(self, method, url, *args, **kwargs):
+        async with RetryClient(
+            retry_options=self.retry_options,
+            raise_for_status=False,
+            trace_configs=[self.trace_config],
+        ) as client:
+            kwargs["ssl"] = SSL_CONTEXT
+            if method.upper() == "GET":
+                async with client.get(url, **kwargs) as resp:
+                    return await validate_json(resp, *args)
+            elif method.upper() == "POST":
+                async with client.post(url, **kwargs) as resp:
+                    return await validate_json(resp, *args)
+            else:
+                raise BadMethod("Accept only GET/POST")
 
 
 def download_audio(url: str, output_dir: str) -> tuple[str, str]:
@@ -143,7 +173,15 @@ async def recognize_segments(
     Returns:
         List of recognition results with timing info
     """
-    shazam = Shazam()
+    shazam = Shazam(
+        http_client=SSLHTTPClient(
+            retry_options=ExponentialRetry(
+                attempts=12,
+                max_timeout=204.8,
+                statuses={500, 502, 503, 504, 429},
+            ),
+        ),
+    )
     results = []
     semaphore = asyncio.Semaphore(max_concurrent)
     total = len(segments)
