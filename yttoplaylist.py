@@ -8,6 +8,7 @@ segment via Shazam, deduplicates, and outputs an ordered tracklist.
 
 import argparse
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -15,11 +16,10 @@ import re
 import ssl
 import subprocess
 import sys
-import tempfile
 import warnings
 from datetime import datetime
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlparse, parse_qs
 
 import certifi
 import aiohttp
@@ -60,6 +60,22 @@ logger = logging.getLogger(__name__)
 
 # SSL context using certifi certificates (fixes macOS Python SSL issues)
 SSL_CONTEXT = ssl.create_default_context(cafile=certifi.where())
+
+# Cache directory for downloaded audio and Shazam results
+CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "yttoplaylist")
+
+
+def get_video_id(url: str) -> str:
+    """Extract YouTube video ID from URL."""
+    parsed = urlparse(url)
+    if parsed.hostname in ("www.youtube.com", "youtube.com", "m.youtube.com"):
+        qs = parse_qs(parsed.query)
+        if "v" in qs:
+            return qs["v"][0]
+    if parsed.hostname == "youtu.be":
+        return parsed.path.lstrip("/")
+    # Fallback: hash the URL
+    return hashlib.md5(url.encode()).hexdigest()[:12]
 
 
 class SSLHTTPClient(HTTPClient):
@@ -103,8 +119,23 @@ class SSLHTTPClient(HTTPClient):
         raise Exception("Shazam API rate limited (429) - try again later")
 
 
-def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tuple[str, str]:
-    """Download audio from YouTube URL using yt-dlp. Returns (audio_path, video_title)."""
+def download_audio(url: str, video_id: str, cookies_browser: str = None) -> tuple[str, str]:
+    """
+    Download audio from YouTube URL using yt-dlp.
+    Caches the audio file so repeated runs don't re-download.
+    Returns (audio_path, video_title).
+    """
+    cache_dir = os.path.join(CACHE_DIR, video_id)
+    os.makedirs(cache_dir, exist_ok=True)
+    cached_audio = os.path.join(cache_dir, "audio.mp3")
+    cached_title = os.path.join(cache_dir, "title.txt")
+
+    # Check cache
+    if os.path.exists(cached_audio) and os.path.exists(cached_title):
+        title = Path(cached_title).read_text().strip()
+        logger.info(f"Using cached audio for: {title}")
+        return cached_audio, title
+
     logger.info(f"Downloading audio from: {url}")
 
     cookie_args = ["--cookies-from-browser", cookies_browser] if cookies_browser else []
@@ -115,7 +146,6 @@ def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tu
         capture_output=True, text=True,
     )
     if result.returncode != 0:
-        # Check for common errors
         if "429" in result.stderr or "bot" in result.stderr.lower():
             logger.error("YouTube rate limited us (429). Try again in a few minutes, or use --cookies-from-browser chrome")
         else:
@@ -124,14 +154,13 @@ def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tu
     title = result.stdout.strip()
 
     # Download as mp3
-    output_path = os.path.join(output_dir, "audio.mp3")
     dl_result = subprocess.run(
         [
             "yt-dlp",
             "-x",                       # extract audio
             "--audio-format", "mp3",     # mp3 — widely compatible
             "--audio-quality", "5",      # medium quality (good enough for fingerprinting)
-            "-o", output_path,
+            "-o", cached_audio,
             "--no-playlist",             # single video only
             *cookie_args,
             url,
@@ -146,16 +175,19 @@ def download_audio(url: str, output_dir: str, cookies_browser: str = None) -> tu
             logger.error(f"yt-dlp download failed:\n{dl_result.stderr}")
         raise RuntimeError(f"yt-dlp download failed (exit code {dl_result.returncode})")
 
-    if not os.path.exists(output_path):
+    if not os.path.exists(cached_audio):
         # yt-dlp sometimes appends extension
-        candidates = list(Path(output_dir).glob("audio.*"))
+        candidates = list(Path(cache_dir).glob("audio.*"))
         if candidates:
-            output_path = str(candidates[0])
+            cached_audio = str(candidates[0])
         else:
             raise FileNotFoundError("Failed to download audio")
 
+    # Save title to cache
+    Path(cached_title).write_text(title)
+
     logger.info(f"Downloaded: {title}")
-    return output_path, title
+    return cached_audio, title
 
 
 def get_audio_duration(audio_path: str) -> float:
@@ -180,27 +212,33 @@ def split_audio(
 ) -> list[tuple[str, int]]:
     """
     Split audio into segments for recognition using ffmpeg.
-
-    Args:
-        audio_path: Path to the audio file
-        output_dir: Directory for segment files
-        segment_duration: Length of each audio clip sent to Shazam (default: 20s)
-        interval: How often to sample (default: every 30s for dense coverage)
-
-    Returns:
-        List of (segment_path, start_time_seconds)
+    Caches segments so repeated runs don't re-split.
     """
     total_duration = int(get_audio_duration(audio_path))
     logger.info(f"Audio duration: {total_duration // 60}m {total_duration % 60}s")
 
     segments = []
-    segments_dir = os.path.join(output_dir, "segments")
+    segments_dir = os.path.join(output_dir, f"segments_{interval}s_{segment_duration}s")
     os.makedirs(segments_dir, exist_ok=True)
 
     position = 0
     num_segments = (total_duration + interval - 1) // interval
+
+    # Check if segments already exist
+    expected_first = os.path.join(segments_dir, "segment_00000.ogg")
+    if os.path.exists(expected_first):
+        logger.info(f"Using cached segments ({num_segments} segments)")
+        while position < total_duration:
+            segment_path = os.path.join(segments_dir, f"segment_{position:05d}.ogg")
+            if os.path.exists(segment_path):
+                segments.append((segment_path, position))
+            position += interval
+        if segments:
+            return segments
+
     logger.info(f"Splitting into {num_segments} segments (every {interval}s, {segment_duration}s each)...")
 
+    position = 0
     while position < total_duration:
         segment_path = os.path.join(segments_dir, f"segment_{position:05d}.ogg")
         subprocess.run(
@@ -224,6 +262,7 @@ def split_audio(
 
 async def recognize_segments(
     segments: list[tuple[str, int]],
+    cache_dir: str,
     request_delay: float = 3.0,
 ) -> list[dict]:
     """
@@ -232,13 +271,17 @@ async def recognize_segments(
     Processes segments SEQUENTIALLY with a fixed delay between requests
     to stay well under Shazam's rate limit (~20 req/min).
 
-    Args:
-        segments: List of (segment_path, start_time_seconds)
-        request_delay: Seconds to wait between each Shazam request (default: 3.0)
-
-    Returns:
-        List of recognition results with timing info
+    Caches results so repeated runs don't re-query Shazam.
     """
+    results_cache = os.path.join(cache_dir, "shazam_results.json")
+
+    # Check cache
+    if os.path.exists(results_cache):
+        with open(results_cache) as f:
+            cached = json.load(f)
+        logger.info(f"Using cached Shazam results ({len(cached)} detections)")
+        return cached
+
     shazam = Shazam(
         http_client=SSLHTTPClient(
             retry_options=ExponentialRetry(
@@ -318,6 +361,12 @@ async def recognize_segments(
 
     print(file=sys.stderr)  # newline after progress bar
 
+    # Save to cache
+    if results:
+        with open(results_cache, "w") as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        logger.info(f"Cached {len(results)} Shazam results")
+
     # Sort by start time
     results.sort(key=lambda x: x["start_time"])
     return results
@@ -325,7 +374,6 @@ async def recognize_segments(
 
 def normalize_title(title: str) -> str:
     """Normalize a track title for deduplication comparison."""
-    # Remove common suffixes like (Original Mix), (Radio Edit), (Album Cut), etc.
     t = re.sub(r'\s*\(.*?\)\s*', ' ', title)
     t = re.sub(r'\s*\[.*?\]\s*', ' ', t)
     t = t.lower().strip()
@@ -336,21 +384,19 @@ def normalize_title(title: str) -> str:
 def deduplicate_tracks(results: list[dict]) -> list[dict]:
     """
     Deduplicate tracks, keeping the first occurrence.
-    Handles both consecutive duplicates and non-consecutive ones
-    (e.g., same song detected at different timestamps with different remix labels).
+    Handles both consecutive duplicates and non-consecutive ones.
     """
     if not results:
         return []
 
     deduped = []
-    seen_keys = set()       # exact Shazam key matches
-    seen_titles = set()     # normalized artist+title for fuzzy matching
+    seen_keys = set()
+    seen_titles = set()
 
     for result in results:
         key = result["shazam_key"]
         normalized = normalize_title(f"{result['artist']} - {result['title']}")
 
-        # Skip if we've seen this exact track or a very similar one
         if key in seen_keys:
             continue
         if normalized in seen_titles:
@@ -463,6 +509,10 @@ async def main():
         help="Keep downloaded audio file (default: delete after processing)",
     )
     parser.add_argument(
+        "--no-cache", action="store_true",
+        help="Ignore cached audio/results and re-download/re-analyze everything",
+    )
+    parser.add_argument(
         "-v", "--verbose", action="store_true",
         help="Verbose output (show unmatched segments too)",
     )
@@ -479,83 +529,92 @@ async def main():
 
     # Clean up URL (remove tracking params but keep video ID)
     url = args.url
-    # Extract just the video URL without noise
     url_clean = re.sub(r'&(pp|t|si)=[^&]*', '', url)
+    video_id = get_video_id(url)
 
-    with tempfile.TemporaryDirectory(prefix="yttoplaylist_") as tmp_dir:
-        # Step 1: Download audio
-        audio_path, video_title = download_audio(url, tmp_dir, cookies_browser=args.cookies_from_browser)
+    # Setup cache directory for this video
+    video_cache_dir = os.path.join(CACHE_DIR, video_id)
+    if args.no_cache:
+        import shutil
+        if os.path.exists(video_cache_dir):
+            shutil.rmtree(video_cache_dir)
+            logger.info("Cache cleared")
 
-        # Step 2: Split into segments
-        segments = split_audio(
-            audio_path, tmp_dir,
-            segment_duration=args.segment_duration,
-            interval=args.interval,
-        )
+    os.makedirs(video_cache_dir, exist_ok=True)
 
-        # Step 3: Recognize each segment
-        results = await recognize_segments(segments)
+    # Step 1: Download audio (cached)
+    audio_path, video_title = download_audio(url, video_id, cookies_browser=args.cookies_from_browser)
 
-        if not results:
-            logger.error("No tracks were recognized. Try with --interval 30 for denser sampling.")
-            sys.exit(1)
+    # Step 2: Split into segments (cached)
+    segments = split_audio(
+        audio_path, video_cache_dir,
+        segment_duration=args.segment_duration,
+        interval=args.interval,
+    )
 
-        # Step 4: Deduplicate
-        tracks = deduplicate_tracks(results)
+    # Step 3: Recognize each segment (cached)
+    results = await recognize_segments(segments, video_cache_dir)
 
-        # Step 5: Search Spotify for each track
-        use_spotify = args.spotify or args.spotify_playlist
-        if use_spotify:
-            logger.info("Searching Spotify for detected tracks...")
-            tracks = await spotify_search_tracks(tracks)
+    if not results:
+        logger.error("No tracks were recognized. Try with --interval 30 for denser sampling.")
+        sys.exit(1)
 
-        # Step 6: Format and save output
-        safe_title = re.sub(r'[^\w\s-]', '', video_title).strip().replace(' ', '_')[:80]
-        output_path = args.output or f"{safe_title}_tracklist.txt"
+    # Step 4: Deduplicate
+    tracks = deduplicate_tracks(results)
 
-        tracklist = format_tracklist(tracks, video_title, url_clean, include_spotify=use_spotify)
+    # Step 5: Search Spotify for each track
+    use_spotify = args.spotify or args.spotify_playlist
+    if use_spotify:
+        logger.info("Searching Spotify for detected tracks...")
+        tracks = await spotify_search_tracks(tracks)
 
-        with open(output_path, "w") as f:
-            f.write(tracklist)
+    # Step 6: Format and save output
+    safe_title = re.sub(r'[^\w\s-]', '', video_title).strip().replace(' ', '_')[:80]
+    output_path = args.output or f"{safe_title}_tracklist.txt"
 
-        if use_spotify:
-            # Generate HTML file to open tracks in Spotify
-            html_path = generate_spotify_html(tracks, video_title, output_path)
-            logger.info(f"Spotify HTML saved to: {html_path}")
+    tracklist = format_tracklist(tracks, video_title, url_clean, include_spotify=use_spotify)
 
-            # Also save the text version
-            spotify_path = output_path.rsplit(".", 1)[0] + "_spotify.txt"
-            with open(spotify_path, "w") as f:
-                f.write(format_spotify_search_urls(tracks))
-            logger.info(f"Spotify links saved to: {spotify_path}")
+    with open(output_path, "w") as f:
+        f.write(tracklist)
 
-        # Create Spotify playlist via OAuth if requested
-        if args.spotify_playlist:
-            playlist_url = create_spotify_playlist(tracks, args.spotify_playlist)
-            if playlist_url:
-                print(f"\n  Spotify playlist created: {playlist_url}")
+    if use_spotify:
+        # Generate HTML file to open tracks in Spotify
+        html_path = generate_spotify_html(tracks, video_title, output_path)
+        logger.info(f"Spotify HTML saved to: {html_path}")
 
-        if args.json:
-            save_json_results(tracks, output_path)
+        # Also save the text version
+        spotify_path = output_path.rsplit(".", 1)[0] + "_spotify.txt"
+        with open(spotify_path, "w") as f:
+            f.write(format_spotify_search_urls(tracks))
+        logger.info(f"Spotify links saved to: {spotify_path}")
 
-        # Keep audio if requested
-        if args.keep_audio:
-            import shutil
-            kept_path = f"{safe_title}.mp3"
-            shutil.copy2(audio_path, kept_path)
-            logger.info(f"Audio saved to: {kept_path}")
+    # Create Spotify playlist via OAuth if requested
+    if args.spotify_playlist:
+        playlist_url = create_spotify_playlist(tracks, args.spotify_playlist)
+        if playlist_url:
+            print(f"\n  Spotify playlist created: {playlist_url}")
 
-        # Print summary
-        print()
-        print(f"=== TRACKLIST: {video_title} ===")
-        print()
-        for i, track in enumerate(tracks, 1):
-            print(f"  {i:2d}. [{track['timestamp']}] {track['artist']} - {track['title']}")
-        print()
-        print(f"Saved to: {output_path}")
-        if use_spotify:
-            print(f"Spotify: open {output_path.rsplit('.', 1)[0] + '_spotify.html'} in your browser")
-        print(f"Total tracks found: {len(tracks)}")
+    if args.json:
+        save_json_results(tracks, output_path)
+
+    # Keep audio if requested
+    if args.keep_audio:
+        import shutil
+        kept_path = f"{safe_title}.mp3"
+        shutil.copy2(audio_path, kept_path)
+        logger.info(f"Audio saved to: {kept_path}")
+
+    # Print summary
+    print()
+    print(f"=== TRACKLIST: {video_title} ===")
+    print()
+    for i, track in enumerate(tracks, 1):
+        print(f"  {i:2d}. [{track['timestamp']}] {track['artist']} - {track['title']}")
+    print()
+    print(f"Saved to: {output_path}")
+    if use_spotify:
+        print(f"Spotify: open {output_path.rsplit('.', 1)[0] + '_spotify.html'} in your browser")
+    print(f"Total tracks found: {len(tracks)}")
 
 
 if __name__ == "__main__":
