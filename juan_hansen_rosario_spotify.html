@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Spotify Playlist: Juan Hansen - presents RADAR Live at Metropolitano, Rosario</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #121212; color: #fff; margin: 2rem; }
+    h1 { color: #1DB954; font-size: 1.5rem; }
+    .subtitle { color: #b3b3b3; margin-bottom: 1.5rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #282828; }
+    th { color: #b3b3b3; font-weight: normal; text-transform: uppercase; font-size: 0.75rem; }
+    tr:hover { background: #1a1a1a; }
+    a { color: #1DB954; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .open-btn { background: #1DB954; color: #000; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; }
+    .open-btn:hover { background: #1ed760; text-decoration: none; }
+    .found { color: #1DB954; font-size: 0.8rem; }
+    .search { color: #b3b3b3; font-size: 0.8rem; }
+    .actions { margin: 1.5rem 0; display: flex; gap: 1rem; }
+    .action-btn { background: #1DB954; color: #000; padding: 10px 24px; border-radius: 24px; border: none;
+                   cursor: pointer; font-weight: bold; font-size: 0.9rem; }
+    .action-btn:hover { background: #1ed760; }
+    .action-btn.secondary { background: #282828; color: #fff; }
+    .action-btn.secondary:hover { background: #333; }
+    #status { color: #b3b3b3; margin-top: 0.5rem; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>🎧 Juan Hansen - presents RADAR Live at Metropolitano, Rosario</h1>
+  <p class="subtitle">34 tracks detected</p>
+
+  <div class="actions">
+    <button class="action-btn" onclick="openAll()">▶ Open All in Spotify</button>
+    <button class="action-btn secondary" onclick="openNext()">⏭ Open Next</button>
+    <button class="action-btn secondary" onclick="copyList()">📋 Copy Track List</button>
+  </div>
+  <p id="status"></p>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Time</th><th>Track</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td>[02:00]</td><td>Dele Sosimi Afrobeat Orchestra - Too Much Information (Laolu Remix (Edit))</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Dele%20Sosimi%20Afrobeat%20Orchestra%20Too%20Much%20Information%20%28Laolu%20Remix%20%28Edit%29%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>2</td><td>[05:30]</td><td>Juan Hansen - My Own Game</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Juan%20Hansen%20My%20Own%20Game" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>3</td><td>[13:30]</td><td>Frankey & Sandrino - Acamar</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Frankey%20%26%20Sandrino%20Acamar" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>4</td><td>[14:00]</td><td>Juan Hansen & Agustin Giri - Sentir Asi (feat. Clara Cava)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Juan%20Hansen%20%26%20Agustin%20Giri%20Sentir%20Asi%20%28feat.%20Clara%20Cava%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>5</td><td>[18:30]</td><td>Juan Hansen - Lost</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Juan%20Hansen%20Lost" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>6</td><td>[19:30]</td><td>Sound Remedy - Paradise</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Sound%20Remedy%20Paradise" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>7</td><td>[21:30]</td><td>Spiller & Sophie Ellis-Bextor - Groovejet (If This Ain't Love) [Purple Disco Machine & Lorenz Rhode Extended Remix]</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Spiller%20%26%20Sophie%20Ellis-Bextor%20Groovejet%20%28If%20This%20Ain%27t%20Love%29%20%5BPurple%20Disco%20Machine%20%26%20Lorenz%20Rhode%20Extended%20Remix%5D" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>8</td><td>[30:00]</td><td>Alter Modo - Heaven's Doorbell (At the Door)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Alter%20Modo%20Heaven%27s%20Doorbell%20%28At%20the%20Door%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>9</td><td>[30:30]</td><td>Øostil & Juan Hansen - Drown (Massano Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/%C3%98ostil%20%26%20Juan%20Hansen%20Drown%20%28Massano%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>10</td><td>[34:00]</td><td>Hoshikuzu Sora - Endless Calm Circuit</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Hoshikuzu%20Sora%20Endless%20Calm%20Circuit" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>11</td><td>[35:30]</td><td>8Kays & Juan Hansen - Falling Down (Chris Avantgarde Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/8Kays%20%26%20Juan%20Hansen%20Falling%20Down%20%28Chris%20Avantgarde%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>12</td><td>[40:00]</td><td>Lost Bird - See the Light</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Lost%20Bird%20See%20the%20Light" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>13</td><td>[40:30]</td><td>Alexandro Korzh - Night Life (Radio Edit)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Alexandro%20Korzh%20Night%20Life%20%28Radio%20Edit%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>14</td><td>[41:30]</td><td>Babasónicos & Juan Hansen - Bye Bye (Juan Hansen Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Babas%C3%B3nicos%20%26%20Juan%20Hansen%20Bye%20Bye%20%28Juan%20Hansen%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>15</td><td>[46:30]</td><td>Tiga & Boys Noize - 100 (Johnny Aux Remix) [Mixed]</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Tiga%20%26%20Boys%20Noize%20100%20%28Johnny%20Aux%20Remix%29%20%5BMixed%5D" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>16</td><td>[51:00]</td><td>George Kraniotakis - Lost in the Silence</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/George%20Kraniotakis%20Lost%20in%20the%20Silence" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>17</td><td>[51:30]</td><td>Darque & Da Capo - Yauna (feat. Idd Aziz)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Darque%20%26%20Da%20Capo%20Yauna%20%28feat.%20Idd%20Aziz%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>18</td><td>[60:00]</td><td>Tyko - Moirai</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Tyko%20Moirai" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>19</td><td>[63:00]</td><td>jon szach presents echo pulse - Fading into you</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/jon%20szach%20presents%20echo%20pulse%20Fading%20into%20you" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>20</td><td>[63:30]</td><td>Township Rebellion - Ramses</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Township%20Rebellion%20Ramses" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>21</td><td>[70:30]</td><td>Gustavo Cerati - Cosas Imposibles (Digi & Gabo Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Gustavo%20Cerati%20Cosas%20Imposibles%20%28Digi%20%26%20Gabo%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>22</td><td>[84:00]</td><td>Juan Hansen, Franco BA & Miko Franconi - Inside My Mind</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Juan%20Hansen%2C%20Franco%20BA%20%26%20Miko%20Franconi%20Inside%20My%20Mind" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>23</td><td>[95:30]</td><td>Mila Journée & Juan Hansen - Two Blade Knife</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Mila%20Journ%C3%A9e%20%26%20Juan%20Hansen%20Two%20Blade%20Knife" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>24</td><td>[98:00]</td><td>The Discoland EP - Get Up (Original Mix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/The%20Discoland%20EP%20Get%20Up%20%28Original%20Mix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>25</td><td>[98:30]</td><td>Blake Shelton - Sangria</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Blake%20Shelton%20Sangria" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>26</td><td>[99:00]</td><td>Hasenchat Music - Music for Fitness Training 4</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Hasenchat%20Music%20Music%20for%20Fitness%20Training%204" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>27</td><td>[100:00]</td><td>Eddie Amador - House Music (Robosonic Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Eddie%20Amador%20House%20Music%20%28Robosonic%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>28</td><td>[103:00]</td><td>Zairi Torrez - Progressive World (2Qimic Remix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Zairi%20Torrez%20Progressive%20World%20%282Qimic%20Remix%29" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>29</td><td>[103:30]</td><td>Juan Hansen & Damon Jee - Hundred Secrets</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Juan%20Hansen%20%26%20Damon%20Jee%20Hundred%20Secrets" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>30</td><td>[105:30]</td><td>Syncom Data - Ekstasis</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Syncom%20Data%20Ekstasis" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>31</td><td>[106:00]</td><td>Armin van Buuren & Shapov - Our Origin</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Armin%20van%20Buuren%20%26%20Shapov%20Our%20Origin" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>32</td><td>[109:00]</td><td>Charly Garcia & Pedro Aznar - Hablando a Tu Corazón</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Charly%20Garcia%20%26%20Pedro%20Aznar%20Hablando%20a%20Tu%20Coraz%C3%B3n" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>33</td><td>[111:30]</td><td>Blagoj Rambabov - Right to Be Wrong</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Blagoj%20Rambabov%20Right%20to%20Be%20Wrong" target="_blank" class="open-btn">Open</a></td></tr>
+      <tr><td>34</td><td>[112:30]</td><td>Ferreck Dawn - Lost at the End (Extended Mix)</td><td><span class="search">search</span></td><td><a href="https://open.spotify.com/search/Ferreck%20Dawn%20Lost%20at%20the%20End%20%28Extended%20Mix%29" target="_blank" class="open-btn">Open</a></td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const urls = ["https://open.spotify.com/search/Dele%20Sosimi%20Afrobeat%20Orchestra%20Too%20Much%20Information%20%28Laolu%20Remix%20%28Edit%29%29", "https://open.spotify.com/search/Juan%20Hansen%20My%20Own%20Game", "https://open.spotify.com/search/Frankey%20%26%20Sandrino%20Acamar", "https://open.spotify.com/search/Juan%20Hansen%20%26%20Agustin%20Giri%20Sentir%20Asi%20%28feat.%20Clara%20Cava%29", "https://open.spotify.com/search/Juan%20Hansen%20Lost", "https://open.spotify.com/search/Sound%20Remedy%20Paradise", "https://open.spotify.com/search/Spiller%20%26%20Sophie%20Ellis-Bextor%20Groovejet%20%28If%20This%20Ain%27t%20Love%29%20%5BPurple%20Disco%20Machine%20%26%20Lorenz%20Rhode%20Extended%20Remix%5D", "https://open.spotify.com/search/Alter%20Modo%20Heaven%27s%20Doorbell%20%28At%20the%20Door%29", "https://open.spotify.com/search/%C3%98ostil%20%26%20Juan%20Hansen%20Drown%20%28Massano%20Remix%29", "https://open.spotify.com/search/Hoshikuzu%20Sora%20Endless%20Calm%20Circuit", "https://open.spotify.com/search/8Kays%20%26%20Juan%20Hansen%20Falling%20Down%20%28Chris%20Avantgarde%20Remix%29", "https://open.spotify.com/search/Lost%20Bird%20See%20the%20Light", "https://open.spotify.com/search/Alexandro%20Korzh%20Night%20Life%20%28Radio%20Edit%29", "https://open.spotify.com/search/Babas%C3%B3nicos%20%26%20Juan%20Hansen%20Bye%20Bye%20%28Juan%20Hansen%20Remix%29", "https://open.spotify.com/search/Tiga%20%26%20Boys%20Noize%20100%20%28Johnny%20Aux%20Remix%29%20%5BMixed%5D", "https://open.spotify.com/search/George%20Kraniotakis%20Lost%20in%20the%20Silence", "https://open.spotify.com/search/Darque%20%26%20Da%20Capo%20Yauna%20%28feat.%20Idd%20Aziz%29", "https://open.spotify.com/search/Tyko%20Moirai", "https://open.spotify.com/search/jon%20szach%20presents%20echo%20pulse%20Fading%20into%20you", "https://open.spotify.com/search/Township%20Rebellion%20Ramses", "https://open.spotify.com/search/Gustavo%20Cerati%20Cosas%20Imposibles%20%28Digi%20%26%20Gabo%20Remix%29", "https://open.spotify.com/search/Juan%20Hansen%2C%20Franco%20BA%20%26%20Miko%20Franconi%20Inside%20My%20Mind", "https://open.spotify.com/search/Mila%20Journ%C3%A9e%20%26%20Juan%20Hansen%20Two%20Blade%20Knife", "https://open.spotify.com/search/The%20Discoland%20EP%20Get%20Up%20%28Original%20Mix%29", "https://open.spotify.com/search/Blake%20Shelton%20Sangria", "https://open.spotify.com/search/Hasenchat%20Music%20Music%20for%20Fitness%20Training%204", "https://open.spotify.com/search/Eddie%20Amador%20House%20Music%20%28Robosonic%20Remix%29", "https://open.spotify.com/search/Zairi%20Torrez%20Progressive%20World%20%282Qimic%20Remix%29", "https://open.spotify.com/search/Juan%20Hansen%20%26%20Damon%20Jee%20Hundred%20Secrets", "https://open.spotify.com/search/Syncom%20Data%20Ekstasis", "https://open.spotify.com/search/Armin%20van%20Buuren%20%26%20Shapov%20Our%20Origin", "https://open.spotify.com/search/Charly%20Garcia%20%26%20Pedro%20Aznar%20Hablando%20a%20Tu%20Coraz%C3%B3n", "https://open.spotify.com/search/Blagoj%20Rambabov%20Right%20to%20Be%20Wrong", "https://open.spotify.com/search/Ferreck%20Dawn%20Lost%20at%20the%20End%20%28Extended%20Mix%29"];
+    let currentIndex = 0;
+
+    function openAll() {
+      if (!confirm('This will open ' + urls.length + ' tabs. Continue?')) return;
+      const status = document.getElementById('status');
+      let opened = 0;
+      urls.forEach((url, i) => {
+        setTimeout(() => {
+          window.open(url, '_blank');
+          opened++;
+          status.textContent = 'Opened ' + opened + '/' + urls.length + '...';
+        }, i * 800);  // 800ms between each to avoid popup blocker
+      });
+    }
+
+    function openNext() {
+      if (currentIndex >= urls.length) {
+        document.getElementById('status').textContent = 'All tracks opened!';
+        currentIndex = 0;
+        return;
+      }
+      window.open(urls[currentIndex], '_blank');
+      document.getElementById('status').textContent = 'Opened track ' + (currentIndex + 1) + '/' + urls.length;
+      currentIndex++;
+    }
+
+    function copyList() {
+      const lines = [];
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+        lines.push(cells[0].textContent + '. ' + cells[2].textContent);
+      });
+      navigator.clipboard.writeText(lines.join('\n')).then(() => {
+        document.getElementById('status').textContent = 'Track list copied to clipboard!';
+      });
+    }
+  </script>
+</body>
+</html>
