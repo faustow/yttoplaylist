@@ -16,16 +16,22 @@ import ssl
 import subprocess
 import sys
 import tempfile
+import warnings
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 
 import certifi
 import aiohttp
 from aiohttp_retry import RetryClient, ExponentialRetry
 from shazamio import Shazam
 from shazamio.client import HTTPClient
-from shazamio.exceptions import BadMethod, FailedDecodeJson
+from shazamio.exceptions import BadMethod
 from shazamio.utils import validate_json
+
+# Suppress pydub's noisy ffmpeg warnings (shazamio uses pydub internally)
+warnings.filterwarnings("ignore", message=".*Couldn't find ffmpeg.*")
+logging.getLogger("pydub.converter").setLevel(logging.ERROR)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -69,14 +75,14 @@ def download_audio(url: str, output_dir: str) -> tuple[str, str]:
     )
     title = result.stdout.strip()
 
-    # Download as mp3
-    output_path = os.path.join(output_dir, "audio.mp3")
+    # Download as ogg (avoids mp3 junk warnings, and shazamio handles ogg natively)
+    output_path = os.path.join(output_dir, "audio.ogg")
     subprocess.run(
         [
             "yt-dlp",
             "-x",                       # extract audio
-            "--audio-format", "mp3",     # convert to mp3
-            "--audio-quality", "5",      # medium quality (smaller file, good enough for fingerprinting)
+            "--audio-format", "vorbis",  # ogg vorbis — clean format, no junk warnings
+            "--audio-quality", "5",      # medium quality (good enough for fingerprinting)
             "-o", output_path,
             "--no-playlist",             # single video only
             url,
@@ -124,8 +130,8 @@ def split_audio(
     Args:
         audio_path: Path to the audio file
         output_dir: Directory for segment files
-        segment_duration: Length of each segment in seconds (how much audio to send to Shazam)
-        interval: How often to sample in seconds (e.g., every 60s = one segment per minute)
+        segment_duration: Length of each segment in seconds
+        interval: How often to sample in seconds
 
     Returns:
         List of (segment_path, start_time_seconds)
@@ -138,6 +144,9 @@ def split_audio(
     os.makedirs(segments_dir, exist_ok=True)
 
     position = 0
+    num_segments = (total_duration + interval - 1) // interval
+    logger.info(f"Splitting into {num_segments} segments (every {interval}s, {segment_duration}s each)...")
+
     while position < total_duration:
         segment_path = os.path.join(segments_dir, f"segment_{position:05d}.ogg")
         subprocess.run(
@@ -155,7 +164,7 @@ def split_audio(
         segments.append((segment_path, position))
         position += interval
 
-    logger.info(f"Created {len(segments)} segments (every {interval}s, {segment_duration}s each)")
+    logger.info(f"Created {len(segments)} segments")
     return segments
 
 
@@ -168,7 +177,7 @@ async def recognize_segments(
 
     Args:
         segments: List of (segment_path, start_time_seconds)
-        max_concurrent: Max concurrent Shazam requests (be gentle with the API)
+        max_concurrent: Max concurrent Shazam requests
 
     Returns:
         List of recognition results with timing info
@@ -185,8 +194,11 @@ async def recognize_segments(
     results = []
     semaphore = asyncio.Semaphore(max_concurrent)
     total = len(segments)
+    completed = 0
+    matched = 0
 
     async def recognize_one(segment_path: str, start_time: int, index: int):
+        nonlocal completed, matched
         async with semaphore:
             timestamp = f"{start_time // 60:02d}:{start_time % 60:02d}"
             try:
@@ -207,6 +219,15 @@ async def recognize_segments(
                                 if action.get("type") == "uri":
                                     spotify_uri = action.get("uri")
 
+                    # Extract Apple Music URL if available
+                    apple_url = None
+                    for provider in providers:
+                        if provider.get("type") == "APPLE":
+                            actions = provider.get("actions", [])
+                            for action in actions:
+                                if action.get("type") == "uri":
+                                    apple_url = action.get("uri")
+
                     result = {
                         "start_time": start_time,
                         "timestamp": timestamp,
@@ -214,40 +235,71 @@ async def recognize_segments(
                         "artist": artist,
                         "shazam_key": shazam_key,
                         "spotify_uri": spotify_uri,
+                        "apple_url": apple_url,
                     }
                     results.append(result)
+                    matched += 1
                     logger.info(f"  [{index + 1}/{total}] {timestamp} -> {artist} - {title}")
                 else:
                     logger.debug(f"  [{index + 1}/{total}] {timestamp} -> No match")
             except Exception as e:
                 logger.warning(f"  [{index + 1}/{total}] {timestamp} -> Error: {e}")
+            finally:
+                completed += 1
+                # Progress indicator on stderr (no newline)
+                pct = completed * 100 // total
+                bar = f"[{'#' * (pct // 5)}{'.' * (20 - pct // 5)}]"
+                print(f"\r  Progress: {bar} {completed}/{total} ({matched} matched)", end="", file=sys.stderr)
 
-    logger.info(f"Recognizing {total} segments...")
+    logger.info(f"Recognizing {total} segments via Shazam...")
     tasks = [
         recognize_one(seg_path, start_time, i)
         for i, (seg_path, start_time) in enumerate(segments)
     ]
     await asyncio.gather(*tasks)
+    print(file=sys.stderr)  # newline after progress bar
 
     # Sort by start time
     results.sort(key=lambda x: x["start_time"])
     return results
 
 
+def normalize_title(title: str) -> str:
+    """Normalize a track title for deduplication comparison."""
+    # Remove common suffixes like (Original Mix), (Radio Edit), (Album Cut), etc.
+    t = re.sub(r'\s*\(.*?\)\s*', ' ', title)
+    t = re.sub(r'\s*\[.*?\]\s*', ' ', t)
+    t = t.lower().strip()
+    t = re.sub(r'\s+', ' ', t)
+    return t
+
+
 def deduplicate_tracks(results: list[dict]) -> list[dict]:
     """
-    Deduplicate consecutive identical tracks, keeping the first occurrence.
-    A DJ set will have the same song detected across multiple consecutive segments.
+    Deduplicate tracks, keeping the first occurrence.
+    Handles both consecutive duplicates and non-consecutive ones
+    (e.g., same song detected at different timestamps with different remix labels).
     """
     if not results:
         return []
 
-    deduped = [results[0]]
-    for result in results[1:]:
-        # Same track as previous? Skip it.
-        if result["shazam_key"] == deduped[-1]["shazam_key"]:
+    deduped = []
+    seen_keys = set()       # exact Shazam key matches
+    seen_titles = set()     # normalized artist+title for fuzzy matching
+
+    for result in results:
+        key = result["shazam_key"]
+        normalized = normalize_title(f"{result['artist']} - {result['title']}")
+
+        # Skip if we've seen this exact track or a very similar one
+        if key in seen_keys:
             continue
+        if normalized in seen_titles:
+            continue
+
         deduped.append(result)
+        seen_keys.add(key)
+        seen_titles.add(normalized)
 
     logger.info(f"Deduplicated: {len(results)} detections -> {len(deduped)} unique tracks")
     return deduped
@@ -279,21 +331,19 @@ def format_tracklist(
 
 
 def format_spotify_search_urls(tracks: list[dict]) -> str:
-    """Generate Spotify search URLs for tracks that don't have a direct URI."""
+    """Generate Spotify search URLs for all tracks."""
     lines = [
         "# Spotify Search Links",
-        "# Open these in your browser to find and add each track",
+        "# Open these URLs in your browser to find and add each track to a playlist",
         "",
     ]
     for i, track in enumerate(tracks, 1):
+        query = quote(f"{track['artist']} {track['title']}")
+        search_url = f"https://open.spotify.com/search/{query}"
+        lines.append(f"{i}. {track['artist']} - {track['title']}")
         if track.get("spotify_uri"):
-            lines.append(f"{i}. {track['artist']} - {track['title']}")
-            lines.append(f"   Spotify URI: {track['spotify_uri']}")
-        else:
-            query = f"{track['artist']} {track['title']}".replace(" ", "%20")
-            search_url = f"https://open.spotify.com/search/{query}"
-            lines.append(f"{i}. {track['artist']} - {track['title']}")
-            lines.append(f"   Search: {search_url}")
+            lines.append(f"   URI: {track['spotify_uri']}")
+        lines.append(f"   Search: {search_url}")
         lines.append("")
 
     return "\n".join(lines)
@@ -351,14 +401,14 @@ async def main():
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
 
-    # Clean up URL (remove tracking params)
-    url = args.url.split("&pp=")[0].split("&t=")[0]
-    if "&" not in url and "?" in url:
-        url = url  # just the video ID param
+    # Clean up URL (remove tracking params but keep video ID)
+    url = args.url
+    # Extract just the video URL without noise
+    url_clean = re.sub(r'&(pp|t|si)=[^&]*', '', url)
 
     with tempfile.TemporaryDirectory(prefix="yttoplaylist_") as tmp_dir:
         # Step 1: Download audio
-        audio_path, video_title = download_audio(args.url, tmp_dir)
+        audio_path, video_title = download_audio(url, tmp_dir)
 
         # Step 2: Split into segments
         segments = split_audio(
@@ -381,7 +431,7 @@ async def main():
         safe_title = re.sub(r'[^\w\s-]', '', video_title).strip().replace(' ', '_')[:80]
         output_path = args.output or f"{safe_title}_tracklist.txt"
 
-        tracklist = format_tracklist(tracks, video_title, args.url, include_spotify=args.spotify)
+        tracklist = format_tracklist(tracks, video_title, url_clean, include_spotify=args.spotify)
 
         with open(output_path, "w") as f:
             f.write(tracklist)
@@ -397,8 +447,8 @@ async def main():
 
         # Keep audio if requested
         if args.keep_audio:
-            kept_path = f"{safe_title}.mp3"
             import shutil
+            kept_path = f"{safe_title}.ogg"
             shutil.copy2(audio_path, kept_path)
             logger.info(f"Audio saved to: {kept_path}")
 
