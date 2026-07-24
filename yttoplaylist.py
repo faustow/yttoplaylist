@@ -33,11 +33,27 @@ from shazamio.utils import validate_json
 warnings.filterwarnings("ignore", message=".*Couldn't find ffmpeg.*")
 logging.getLogger("pydub.converter").setLevel(logging.ERROR)
 
+
+class OutputFilter(logging.Filter):
+    """Filter out noisy pydub/ffmpeg/shazamio internal messages from output."""
+    NOISE_PATTERNS = (
+        "skipping junk", "invalid mpeg audio header", "estimating duration",
+        "found the format marker", "format marker",
+    )
+
+    def filter(self, record):
+        msg = record.getMessage()
+        return not any(p in msg for p in self.NOISE_PATTERNS)
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     datefmt="%H:%M:%S",
 )
+# Apply warning filter to root logger
+for handler in logging.root.handlers:
+    handler.addFilter(OutputFilter())
 logger = logging.getLogger(__name__)
 
 # SSL context using certifi certificates (fixes macOS Python SSL issues)
@@ -75,22 +91,24 @@ def download_audio(url: str, output_dir: str) -> tuple[str, str]:
     )
     title = result.stdout.strip()
 
-    # Download as ogg (avoids mp3 junk warnings, and shazamio handles ogg natively)
-    output_path = os.path.join(output_dir, "audio.ogg")
-    subprocess.run(
+    # Download as mp3
+    output_path = os.path.join(output_dir, "audio.mp3")
+    dl_result = subprocess.run(
         [
             "yt-dlp",
             "-x",                       # extract audio
-            "--audio-format", "vorbis",  # ogg vorbis — clean format, no junk warnings
+            "--audio-format", "mp3",     # mp3 — widely compatible
             "--audio-quality", "5",      # medium quality (good enough for fingerprinting)
             "-o", output_path,
             "--no-playlist",             # single video only
             url,
         ],
-        check=True,
         capture_output=True,
         text=True,
     )
+    if dl_result.returncode != 0:
+        logger.error(f"yt-dlp failed:\n{dl_result.stderr}")
+        raise RuntimeError(f"yt-dlp download failed (exit code {dl_result.returncode})")
 
     if not os.path.exists(output_path):
         # yt-dlp sometimes appends extension
@@ -185,8 +203,8 @@ async def recognize_segments(
     shazam = Shazam(
         http_client=SSLHTTPClient(
             retry_options=ExponentialRetry(
-                attempts=12,
-                max_timeout=204.8,
+                attempts=5,
+                max_timeout=30.0,
                 statuses={500, 502, 503, 504, 429},
             ),
         ),
@@ -202,7 +220,10 @@ async def recognize_segments(
         async with semaphore:
             timestamp = f"{start_time // 60:02d}:{start_time % 60:02d}"
             try:
-                out = await shazam.recognize(segment_path)
+                out = await asyncio.wait_for(
+                    shazam.recognize(segment_path),
+                    timeout=60,  # 60s max per segment
+                )
                 if out and "track" in out:
                     track = out["track"]
                     title = track.get("title", "Unknown")
@@ -448,7 +469,7 @@ async def main():
         # Keep audio if requested
         if args.keep_audio:
             import shutil
-            kept_path = f"{safe_title}.ogg"
+            kept_path = f"{safe_title}.mp3"
             shutil.copy2(audio_path, kept_path)
             logger.info(f"Audio saved to: {kept_path}")
 
