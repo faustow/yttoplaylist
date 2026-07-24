@@ -1,0 +1,59 @@
+# Magdalena @ La Estación Córdoba 2025 - Spotify Playlist
+# Source: https://www.youtube.com/watch?v=XR7771GXI1c
+# Found: 16/18 tracks on Spotify (2 not available)
+
+# Copy-paste these URIs into Spotify (Ctrl+V in search bar opens the track):
+
+# 1. [04:00] Editors - Frankenstein (Joyhauser Mix)
+spotify:track:7Js8hbfiAqmZDGmkNkDz7E
+
+# 2. [10:00] 2THIRD - Bet U Know Me
+spotify:track:23Kr7Dzlslo8ThJyaX2Eps
+
+# 3. [13:00] Moloko - Sing It Back (Boris Musical Mix)
+spotify:track:4O0LwyuV3U18Hg5AxILDlI
+
+# 4. [14:00] MIKAA & Joui - Talk My Talk
+spotify:track:6RXysEiBDzPbUfU6BW0Tx8
+
+# 5. [19:00] Cloz & RIKO & GUGGA - Make Money, No Friends
+spotify:track:7FUMfENBxu8OonOSgjvs3R
+
+# 6. [24:00] Boris Way & Zans - More
+spotify:track:0lxaE62v5sW1FtSfN3qFGd
+
+# 7. [28:00] Andrey Subbotin - Don't Cry
+spotify:track:3AHeYte9FrcWvcHDATDkj6
+
+# 8. [30:00] Borey - Feel Of The Night
+spotify:track:5cEO6TVLoxYzWDrki8xQF6
+
+# 9. [32:00] Chris Fortier & Neil Kolo - All I Got
+spotify:track:0ZHE798YWpTkDZ0qnEhvXb
+
+# 10. [35:00] Oxia - Domino
+spotify:track:0XZYS57wx4hk8FAzc9MxfQ
+
+# 11. [41:00] Paul Morena - Here Goes
+# NOT ON SPOTIFY
+
+# 12. [61:00] Alice Deejay - Better Off Alone
+spotify:track:5XVjNRubJUW0iPhhSWpLCj
+
+# 13. [64:00] Rank 1 - Airwave
+spotify:track:294bZQoJEueD2ys3wrNDmI
+
+# 14. [67:00] Reflekt - Need To Feel Loved
+spotify:track:30cjLreSF4Xq0uAB89i2Ac
+
+# 15. [69:00] Max Styler & Deomid - Get Down
+spotify:track:2yTpDmjDmVH60bjOIfazAe
+
+# 16. [71:00] Carl Bee - Somethin' Like This
+spotify:track:3Pb4PXNNJDj69c8reOga5x
+
+# 17. [84:00] Big Hen Techno - Traffic
+# NOT ON SPOTIFY
+
+# 18. [90:00] Soda Stereo - De Música Ligera
+spotify:track:4it4NYn9wNqGV54joA6oN0

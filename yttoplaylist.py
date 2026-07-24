@@ -28,6 +28,7 @@ from shazamio import Shazam
 from shazamio.client import HTTPClient
 from shazamio.exceptions import BadMethod
 from shazamio.utils import validate_json
+from spotify_search import search_tracks as spotify_search_tracks
 
 # Suppress pydub's noisy ffmpeg warnings (shazamio uses pydub internally)
 warnings.filterwarnings("ignore", message=".*Couldn't find ffmpeg.*")
@@ -356,7 +357,9 @@ def format_tracklist(
 
     for i, track in enumerate(tracks, 1):
         line = f"{i:2d}. [{track['timestamp']}] {track['artist']} - {track['title']}"
-        if include_spotify and track.get("spotify_uri"):
+        if include_spotify and track.get("spotify_url"):
+            line += f"  |  {track['spotify_url']}"
+        elif include_spotify and track.get("spotify_uri"):
             line += f"  |  {track['spotify_uri']}"
         lines.append(line)
 
@@ -365,21 +368,30 @@ def format_tracklist(
 
 
 def format_spotify_search_urls(tracks: list[dict]) -> str:
-    """Generate Spotify search URLs for all tracks."""
+    """Generate Spotify links for all tracks."""
     lines = [
-        "# Spotify Search Links",
-        "# Open these URLs in your browser to find and add each track to a playlist",
+        "# Spotify Playlist",
+        "# Tracks with Spotify URIs can be pasted directly into Spotify search",
+        "# Tracks with URLs can be opened in browser",
         "",
     ]
+    found = 0
     for i, track in enumerate(tracks, 1):
-        query = quote(f"{track['artist']} {track['title']}")
-        search_url = f"https://open.spotify.com/search/{query}"
         lines.append(f"{i}. {track['artist']} - {track['title']}")
-        if track.get("spotify_uri"):
+        if track.get("spotify_url"):
+            lines.append(f"   URL: {track['spotify_url']}")
             lines.append(f"   URI: {track['spotify_uri']}")
-        lines.append(f"   Search: {search_url}")
+            found += 1
+        elif track.get("spotify_uri"):
+            lines.append(f"   URI: {track['spotify_uri']}")
+            found += 1
+        else:
+            query = quote(f"{track['artist']} {track['title']}")
+            lines.append(f"   Search: https://open.spotify.com/search/{query}")
+            lines.append(f"   (not found on Spotify)")
         lines.append("")
 
+    lines.insert(3, f"# Found on Spotify: {found}/{len(tracks)}")
     return "\n".join(lines)
 
 
@@ -466,7 +478,12 @@ async def main():
         # Step 4: Deduplicate
         tracks = deduplicate_tracks(results)
 
-        # Step 5: Format and save output
+        # Step 5: Search Spotify for each track
+        if args.spotify:
+            logger.info("Searching Spotify for detected tracks...")
+            tracks = await spotify_search_tracks(tracks)
+
+        # Step 6: Format and save output
         safe_title = re.sub(r'[^\w\s-]', '', video_title).strip().replace(' ', '_')[:80]
         output_path = args.output or f"{safe_title}_tracklist.txt"
 
